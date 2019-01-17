@@ -3,6 +3,7 @@ import re
 import sys
 import tkinter
 import winreg
+from tkinter import messagebox
 
 root = tkinter.Tk()
 root.title("CK2/EU4 Installer")
@@ -30,18 +31,45 @@ def install(target_app_id):
     if key_type != winreg.REG_SZ:
         raise Exception("invald value")
 
-    # インストールディレクトリにあるsteamapps/appmanifest_[APPID].acfを探す
+    # デフォルトのsteamappsフォルダを探す
     steam_apps_path = os.path.join(steam_install_path, "steamapps")
-    target_app_acf_path = os.path.join(steam_apps_path, "appmanifest_{}.acf".format(target_app_id))
+    if os.path.exists(steam_apps_path) is False:
+        raise Exception("not find steamapps folder")
 
-    # なければ別処理をする必要あり
+    # acfがあるフォルダを列挙
+    acf_dir_paths = [steam_apps_path]
+    acf_dir_paths.extend(get_lib_folders_from_vdf(steam_apps_path))
+
+    # 各ディレクトリについて処理
+    game_install_dir_path = None
+    for dir_path in acf_dir_paths:
+        game_install_dir_path = get_game_install_dir(dir_path, target_app_id)
+        if game_install_dir_path is None:
+            print("not find target acf...")
+            continue
+        else:
+            print("find target acf")
+            break
+
+    if game_install_dir_path is None:
+        raise Exception("not find game install dir")
+
+    return game_install_dir_path
+
+
+def get_game_install_dir(dir_path, target_app_id):
+    # インストールディレクトリにあるsteamapps/appmanifest_[APPID].acfを探す
+    target_app_acf_path = os.path.join(dir_path, "appmanifest_{}.acf".format(target_app_id))
+
+    # なければ終了
     if os.path.exists(target_app_acf_path) is False:
-        raise Exception("sorry. not implemented")
+        return None
 
     # acfファイルにある"installdir" "xxxx"をさがす
     install_dir_pattern = re.compile(r'\s*"installdir"\s+"(.*)')
     game_install_dir_name = None
     with open(target_app_acf_path, 'r') as target_app_acf_file:
+        print("open file:" + target_app_acf_file.name)
         for line in target_app_acf_file:
             result = install_dir_pattern.match(line)
             if result is not None:
@@ -52,52 +80,61 @@ def install(target_app_id):
             raise Exception("invalid acf file")
 
     # パスを確認
-    game_install_dir_path = os.path.join(steam_apps_path, "common", game_install_dir_name)
+    game_install_dir_path = os.path.join(dir_path, "common", game_install_dir_name)
 
     if os.path.exists(game_install_dir_path) is False:
         raise Exception("not reached install directory")
 
-    print(game_install_dir_path)
+    return game_install_dir_path
 
 
-# EU4 multibyte dllのインストール
-def eu4Func1():
-    install(236850)
+def get_lib_folders_from_vdf(steam_apps_path):
+    # vdfファイルを探す
+    library_folders_vdf_path = os.path.join(steam_apps_path, "libraryfolders.vdf")
+    if os.path.exists(library_folders_vdf_path) is False:
+        raise Exception("not find libraryfolders.vdf")
+
+    # vdfファイルにある"[数字]" "xxxx"をさがす
+    install_dir_pattern = re.compile(r'\s*"[0-9]+"\s+"(.*)')
+    game_libs_paths = []
+    with open(library_folders_vdf_path, 'r') as target_vdf_file:
+        print("open file:" + target_vdf_file.name)
+        for line in target_vdf_file:
+            result = install_dir_pattern.match(line)
+            if result is not None:
+                game_libs_paths.append(os.path.join(result.group(1).strip("\"").replace("\\\\", "\\"), "steamapps"))
+
+    return game_libs_paths
 
 
-def ck2Func2():
-    install(203770)
+def installer(app_id):
+    try:
+        print(install(app_id))
+    except Exception as exp:
+        messagebox.showerror("Error", exp.args[0])
 
 
-labelConfig = {
-    'font': ("Helvetica", 16),
-    'anchor': 'w',
-    'justify': 'left',
-    'text': "EU4/CK2 Multibyte DLL Installer",
-    'width': 400
-}
-label = tkinter.Label(root, labelConfig)
+label = tkinter.Label(root,
+                      font=("Helvetica", 16),
+                      anchor='w',
+                      justify='left',
+                      text="EU4/CK2 Multibyte DLL Installer",
+                      width=400)
 label.pack()
+
 eu4installButton = tkinter.Button(root,
                                   text='Install EU4 Multibyte DLL',
-                                  command=eu4Func1,
+                                  command=lambda x=236850: installer(x),
                                   width=400,
                                   font=("Helvetica", 12))
 eu4installButton.pack()
 
 ck2InstallButton = tkinter.Button(root,
                                   text='Install CK2 Multibyte DLL',
-                                  command=ck2Func2,
+                                  command=lambda x=203770: installer(x),
                                   width=400,
                                   font=("Helvetica", 12))
 ck2InstallButton.pack()
-
-log = tkinter.Message(root,
-                      text='aaa',
-                      width=400,
-                      anchor='w',
-                      justify='left')
-log.pack()
 
 exitButton = tkinter.Button(root,
                             text='Exit',
