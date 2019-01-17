@@ -2,15 +2,28 @@ import os.path
 import re
 import sys
 import tkinter
+import urllib.request
 import winreg
+import zipfile
 from tkinter import messagebox
 
 root = tkinter.Tk()
-root.title("CK2/EU4 Installer")
+root.title("CK2/EU4 Multibyte Installer")
 root.geometry("400x300")
 
 
-def install(target_app_id):
+def install(install_dir_path, target_zip_url):
+    urllib.request.urlretrieve(target_zip_url, 'tmp__multibytedllset.zip')
+
+    print("download success")
+
+    with zipfile.ZipFile("tmp__multibytedllset.zip") as existing_zip:
+        existing_zip.extractall(install_dir_path)
+
+    os.remove("tmp__multibytedllset.zip")
+
+
+def get_game_install_dir_path(target_app_id):
     # レジストリを見て、Steamのインストール先を探す
     # 32bitを見て、なければ64bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
     try:
@@ -107,9 +120,16 @@ def get_lib_folders_from_vdf(steam_apps_path):
     return game_libs_paths
 
 
-def installer(app_id):
+def installer(app_id, target_zip):
     try:
-        print(install(app_id))
+        install_dir_path = get_game_install_dir_path(app_id)
+        print(install_dir_path)
+
+        install(install_dir_path, target_zip)
+        print("success")
+
+        messagebox.showinfo("Success", "Install success!")
+
     except Exception as exp:
         messagebox.showerror("Error", exp.args[0])
 
@@ -124,14 +144,18 @@ label.pack()
 
 eu4installButton = tkinter.Button(root,
                                   text='Install EU4 Multibyte DLL',
-                                  command=lambda x=236850: installer(x),
+                                  command=lambda x=236850,
+                                                 y="https://github.com/matanki-saito/SimpleInstaller/files/2769846/eu4.zip"
+                                  : installer(x, y),
                                   width=400,
                                   font=("Helvetica", 12))
 eu4installButton.pack()
 
 ck2InstallButton = tkinter.Button(root,
                                   text='Install CK2 Multibyte DLL',
-                                  command=lambda x=203770: installer(x),
+                                  command=lambda x=203770,
+                                                 y="https://github.com/matanki-saito/SimpleInstaller/files/2769845/ck2.zip"
+                                  : installer(x, y),
                                   width=400,
                                   font=("Helvetica", 12))
 ck2InstallButton.pack()
