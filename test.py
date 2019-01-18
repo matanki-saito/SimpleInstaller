@@ -1,3 +1,4 @@
+import locale
 import os.path
 import re
 import sys
@@ -7,20 +8,80 @@ import winreg
 import zipfile
 from tkinter import messagebox
 
-root = tkinter.Tk()
-root.title("CK2/EU4 Multibyte Installer")
-root.geometry("400x300")
+
+# gettextなどを使うのが正解だろうが、面倒なので
+def get_language_windows(system_lang=True):
+    """Get language code based on current Windows settings.
+    @return: list of languages.
+    """
+    try:
+        import ctypes
+    except ImportError:
+        return [locale.getdefaultlocale()[0]]
+    # get all locales using windows API
+    lcid_user = ctypes.windll.kernel32.GetUserDefaultLCID()
+    lcid_system = ctypes.windll.kernel32.GetSystemDefaultLCID()
+    if system_lang and lcid_user != lcid_system:
+        lcids = [lcid_user, lcid_system]
+    else:
+        lcids = [lcid_user]
+    return list(filter(None, [locale.windows_locale.get(i) for i in lcids]))[0] or None
 
 
-def install(install_dir_path, target_zip_url):
-    urllib.request.urlretrieve(target_zip_url, 'tmp__multibytedllset.zip')
+loc = get_language_windows()
+loca_dic = {
+    'EXIT': {
+        'default': 'Exit',
+        'ja_JP': '終了'
+    },
+    'INSTALL_CK2_MBDLL': {
+        'default': 'Install CK2 Multibyte DLL',
+        'ja_JP': 'CK2日本語化セットをインストール'
+    },
+    'INSTALL_EU4_MBDLL': {
+        'default': 'Install EU4 Multibyte DLL',
+        'ja_JP': 'EU4日本語化セットをインストール'
+    },
+    'TITLE': {
+        'default': 'CK2/EU4 Multibyte Installer',
+        'ja_JP': 'CK2/EU4 日本語化インストーラー'
+    },
+    'SUCCESS_BOX_MESSAGE': {
+        'default': 'Install Success',
+        'ja_JP': 'インストール成功！'
+    },
+    'SUCCESS_BOX_TITLE': {
+        'default': 'success',
+        'ja_JP': '成功！'
+    },
+    'ERROR_BOX_TITLE': {
+        'default': 'failed',
+        'ja_JP': '失敗...'
+    },
+    'ERR_NOT_EXIST_FINAL_CHECK_FILE': {
+        'default': 'not exist final check file',
+        'ja_JP': '最終チェックファイルがありません'
+    }
+}
 
-    print("download success")
 
-    with zipfile.ZipFile("tmp__multibytedllset.zip") as existing_zip:
+def _(key):
+    if loca_dic.get(key) is None:
+        return key
+    if loca_dic.get(key).get(loc) is None:
+        return loca_dic.get(key).get('default')
+
+    return loca_dic.get(key).get(loc)
+
+
+def install(install_dir_path, target_zip_url, final_check_file):
+    # 最終チェックファイルがあるかを確認する
+    if os.path.exists(os.path.join(install_dir_path, final_check_file)) is False:
+        raise Exception(_('ERR_NOT_EXIST_FINAL_CHECK_FILE'))
+
+    path, headers = urllib.request.urlretrieve(target_zip_url)
+    with zipfile.ZipFile(path) as existing_zip:
         existing_zip.extractall(install_dir_path)
-
-    os.remove("tmp__multibytedllset.zip")
 
 
 def get_game_install_dir_path(target_app_id):
@@ -58,10 +119,8 @@ def get_game_install_dir_path(target_app_id):
     for dir_path in acf_dir_paths:
         game_install_dir_path = get_game_install_dir(dir_path, target_app_id)
         if game_install_dir_path is None:
-            print("not find target acf...")
             continue
         else:
-            print("find target acf")
             break
 
     if game_install_dir_path is None:
@@ -82,7 +141,6 @@ def get_game_install_dir(dir_path, target_app_id):
     install_dir_pattern = re.compile(r'\s*"installdir"\s+"(.*)')
     game_install_dir_name = None
     with open(target_app_acf_path, 'r') as target_app_acf_file:
-        print("open file:" + target_app_acf_file.name)
         for line in target_app_acf_file:
             result = install_dir_pattern.match(line)
             if result is not None:
@@ -111,7 +169,6 @@ def get_lib_folders_from_vdf(steam_apps_path):
     install_dir_pattern = re.compile(r'\s*"[0-9]+"\s+"(.*)')
     game_libs_paths = []
     with open(library_folders_vdf_path, 'r') as target_vdf_file:
-        print("open file:" + target_vdf_file.name)
         for line in target_vdf_file:
             result = install_dir_pattern.match(line)
             if result is not None:
@@ -120,52 +177,50 @@ def get_lib_folders_from_vdf(steam_apps_path):
     return game_libs_paths
 
 
-def installer(app_id, target_zip):
+def installer(app_id, target_zip, final_check_file):
     try:
         install_dir_path = get_game_install_dir_path(app_id)
-        print(install_dir_path)
-
-        install(install_dir_path, target_zip)
-        print("success")
-
-        messagebox.showinfo("Success", "Install success!")
+        install(install_dir_path, target_zip, final_check_file)
+        messagebox.showinfo(_('SUCCESS_BOX_TITLE'), _('SUCCESS_BOX_MESSAGE'))
 
     except Exception as exp:
-        messagebox.showerror("Error", exp.args[0])
+        messagebox.showerror(_('ERROR_BOX_TITLE'), exp.args[0])
 
 
-label = tkinter.Label(root,
-                      font=("Helvetica", 16),
-                      anchor='w',
-                      justify='left',
-                      text="EU4/CK2 Multibyte DLL Installer",
-                      width=400)
-label.pack()
+if __name__ == '__main__':
+    root = tkinter.Tk()
+    root.title(_('TITLE'))
 
-eu4installButton = tkinter.Button(root,
-                                  text='Install EU4 Multibyte DLL',
-                                  command=lambda x=236850,
-                                                 y="https://github.com/matanki-saito/SimpleInstaller/files/2769846/eu4.zip"
-                                  : installer(x, y),
-                                  width=400,
-                                  font=("Helvetica", 12))
-eu4installButton.pack()
+    root.geometry("300x300")
 
-ck2InstallButton = tkinter.Button(root,
-                                  text='Install CK2 Multibyte DLL',
-                                  command=lambda x=203770,
-                                                 y="https://github.com/matanki-saito/SimpleInstaller/files/2769845/ck2.zip"
-                                  : installer(x, y),
-                                  width=400,
-                                  font=("Helvetica", 12))
-ck2InstallButton.pack()
+    eu4installButton = tkinter.Button(root,
+                                      activebackground='#A59564',
+                                      background='#A0873C',
+                                      text=_('INSTALL_EU4_MBDLL'),
+                                      command=lambda x=236850,
+                                                     y="https://github.com/matanki-saito/SimpleInstaller/files/2769846/eu4.zip",
+                                                     z='eu4.exe'
+                                      : installer(x, y, z),
+                                      font=("Helvetica", 12))
+    eu4installButton.pack(expand=True, fill='both')
 
-exitButton = tkinter.Button(root,
-                            text='Exit',
-                            command=sys.exit,
-                            width=400,
-                            anchor='s',
-                            font=("Helvetica", 12))
-exitButton.pack()
+    ck2InstallButton = tkinter.Button(root,
+                                      activebackground='#80ABA9',
+                                      background='#92B5A9',
+                                      text=_('INSTALL_CK2_MBDLL'),
+                                      command=lambda x=203770,
+                                                     y="https://github.com/matanki-saito/SimpleInstaller/files/2769845/ck2.zip",
+                                                     z='ck2game.exe'
+                                      : installer(x, y, z),
+                                      font=("Helvetica", 12))
+    ck2InstallButton.pack(expand=True, fill='both')
 
-root.mainloop()
+    exitButton = tkinter.Button(root,
+                                background='#A3A3A2',
+                                text=_('EXIT'),
+                                command=sys.exit,
+                                height='1',
+                                font=("Helvetica", 12))
+    exitButton.pack(fill='both')
+
+    root.mainloop()

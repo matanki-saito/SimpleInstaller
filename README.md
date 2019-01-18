@@ -1,2 +1,2 @@
 # SimpleInstaller
-simply installer
+インストーラーはじめました。
