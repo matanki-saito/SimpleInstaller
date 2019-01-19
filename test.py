@@ -7,7 +7,7 @@ import urllib.request
 import winreg
 import zipfile
 from tkinter import messagebox
-import threading
+
 
 # gettextなどを使うのが正解だろうが、面倒なので
 def get_language_windows(system_lang=True):
@@ -220,14 +220,11 @@ def get_lib_folders_from_vdf(steam_apps_path):
 
 
 def installer(app_id, target_zip, final_check_file):
-    executor = ThreadPoolExecutor(max_workers=2)
-
-    a = executor.submit(wait_on_b)
-    b = executor.submit(wait_on_a)
-
     try:
         install_dir_path = get_game_install_dir_path(app_id)
+
         install(install_dir_path, target_zip, final_check_file)
+
         messagebox.showinfo(_('SUCCESS_BOX_TITLE'), _('SUCCESS_BOX_MESSAGE'))
 
     except Exception as exp:
