@@ -110,7 +110,7 @@ loca_dic = {
         'ko_KR': '실패 : https://github.com/matanki-saito/SimpleInstaller를 참조하십시오.',
         'de_DE': 'Fehlgeschlagen: siehe https://github.com/matanki-saito/SimpleInstaller'
     },
-    'ERROR_BOX_TTTLE': {
+    'ERROR_BOX_TITLE': {
         'default': 'Failed',
         'ja_JP': '失敗',
         'zh_CN': '失败',
@@ -275,7 +275,7 @@ def installer(app_id, target_zip, final_check_file):
         messagebox.showinfo(_('SUCCESS_BOX_TITLE'), _('SUCCESS_BOX_MESSAGE'))
 
     except Exception as exp:
-        messagebox.showerror(_('ERROR_BOX_TITLE'), exp.args[0])
+        messagebox.showerror(_('ERROR_BOX_TITLE'), _('ERROR_BOX_MESSAGE') + ":\n" + exp.args[0])
 
 
 def about():
