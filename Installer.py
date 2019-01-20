@@ -32,77 +32,124 @@ loc = get_language_windows()
 loca_dic = {
     'EXIT': {
         'default': 'Exit',
-        'ja_JP': '終了'
+        'ja_JP': '終了',
+        'zh_CN': '终了',
+        'zh_TW': '終了',
+        'ko_KR': '종료',
+        'de_DE': 'Ausfahrt'
     },
     'ABOUT': {
         'default': 'About',
-        'ja_JP': 'このソフトについて'
+        'ja_JP': 'このソフトについて',
+        'zh_CN': '关于这个软件',
+        'zh_TW': '關於這個軟件',
+        'ko_KR': '이 소프트웨어에 대한',
+        'de_DE': 'Über'
     },
     'INSTALL_CK2_MBDLL': {
         'default': 'Install CK2 Multibyte DLL',
-        'ja_JP': 'CK2日本語化DLLをインストール'
+        'ja_JP': 'CK2日本語化DLLをインストール',
+        'zh_CN': '安装CK2 Multibyte DLL',
+        'zh_TW': '安裝CK2 Multibyte DLL',
+        'ko_KR': 'CK2 멀티 바이트 DLL 설치',
+        'de_DE': 'Installieren Sie die CK2-Multibyte-DLL'
     },
     'INSTALL_EU4_MBDLL': {
         'default': 'Install EU4 Multibyte DLL',
-        'ja_JP': 'EU4日本語化DLLをインストール'
+        'ja_JP': 'EU4日本語化DLLをインストール',
+        'zh_CN': '安装EU4 Multibyte DLL',
+        'zh_TW': '安裝EU4 Multibyte DLL',
+        'ko_KR': 'EU4 멀티 바이트 DLL 설치',
+        'de_DE': 'Installieren Sie die EU4-Multibyte-DLL'
     },
     'TITLE': {
-        'default': 'CK2/EU4 Multibyte Installer',
-        'ja_JP': 'CK2/EU4 日本語化インストーラー'
+        'default': 'CK2/EU4 Multibyte DLL Installer',
+        'ja_JP': 'CK2/EU4 日本語化DLLインストーラー',
+        'zh_CN': 'CK2 / EU4多字节DLL安装程序',
+        'zh_TW': 'CK2 / EU4多字節DLL安裝程序',
+        'ko_KR': 'CK2 / EU4 멀티 바이트 DLL 설치 프로그램',
+        'de_DE': 'CK2 / EU4 Multibyte DLL Installer'
     },
     'SUCCESS_BOX_MESSAGE': {
-        'default': 'Install Success',
-        'ja_JP': 'インストール成功！'
+        'default': 'Install Succeeded.',
+        'ja_JP': 'インストール成功！',
+        'zh_CN': '安装成功',
+        'zh_TW': '安裝成功',
+        'ko_KR': '설치 성공',
+        'de_DE': 'Installieren Sie erfolgreich'
     },
     'SUCCESS_BOX_TITLE': {
-        'default': 'success',
-        'ja_JP': '成功！'
+        'default': 'Success',
+        'ja_JP': '成功！',
+        'zh_CN': '成功',
+        'zh_TW': '成功',
+        'ko_KR': '성공한',
+        'de_DE': 'Erfolg'
     },
     'ABOUT_BOX_MESSAGE': {
-        'default': 'URL: https://github.com/matanki-saito/SimpleInstaller',
-        'ja_JP': 'インストーラー最新版配布元: https://github.com/matanki-saito/SimpleInstaller'
+        'default': 'Distribution URL: https://github.com/matanki-saito/SimpleInstaller',
+        'ja_JP': 'インストーラー最新版配布元: https://github.com/matanki-saito/SimpleInstaller',
+        'zh_CN': '分发网址: https://github.com/matanki-saito/SimpleInstaller',
+        'zh_TW': '分發網址: https://github.com/matanki-saito/SimpleInstaller',
+        'ko_KR': '게재 URL: https://github.com/matanki-saito/SimpleInstaller',
+        'de_DE': 'Verteilungs-URL: https://github.com/matanki-saito/SimpleInstaller'
     },
     'ABOUT_BOX_TITLE': {
         'default': 'About',
-        'ja_JP': 'このソフトについて'
+        'ja_JP': 'このソフトについて',
+        'zh_CN': '关于这个软件',
+        'zh_TW': '關於這個軟件',
+        'ko_KR': '이 소프트웨어에 대한',
+        'de_DE': 'Über'
     },
-
-    'ERROR_BOX_TITLE': {
-        'default': 'failed: goto https://github.com/matanki-saito/SimpleInstaller',
-        'ja_JP': '失敗：https://github.com/matanki-saito/SimpleInstallerを見てください'
+    'ERROR_BOX_MESSAGE': {
+        'default': 'Failed: please see https://github.com/matanki-saito/SimpleInstaller',
+        'ja_JP': '失敗：https://github.com/matanki-saito/SimpleInstallerをご覧ください',
+        'zh_CN': '失败：请参阅https://github.com/matanki-saito/SimpleInstaller',
+        'zh_TW': '失敗：請參閱https://github.com/matanki-saito/SimpleInstaller',
+        'ko_KR': '실패 : https://github.com/matanki-saito/SimpleInstaller를 참조하십시오.',
+        'de_DE': 'Fehlgeschlagen: siehe https://github.com/matanki-saito/SimpleInstaller'
+    },
+    'ERROR_BOX_TTTLE': {
+        'default': 'Failed',
+        'ja_JP': '失敗',
+        'zh_CN': '失败',
+        'zh_TW': '失敗',
+        'ko_KR': '실패',
+        'de_DE': 'Fehlgeschlagen'
     },
     'ERR_NOT_EXIST_FINAL_CHECK_FILE': {
-        'default': 'not exist final check file',
-        'ja_JP': '最終チェックファイルがありません'
+        'default': 'Selected game itself was not found.',
+        'ja_JP': '選択したゲーム本体が見つかりませんでした'
     },
     'ERR_NOT_FIND_LIBRARYFOLDERS_VDF': {
-        'default': 'Not find libraryfolders.vdf',
-        'ja_JP': 'libraryfolders.vdfが見つかりませんでした'
+        'default': 'File libraryfolders.vdf was not found.',
+        'ja_JP': 'libraryfolders.vdfファイルが見つかりませんでした'
     },
     'ERR_NOT_FIND_STEAM_REGKEY': {
-        'default': 'Not find steam registry key',
+        'default': 'Steam registry key was not found.',
         'ja_JP': 'Steamのレジストリキーが見つかりませんでした'
     },
     'ERR_NOT_FIND_INSTALLPATH_IN_STEAM_REGKEY': {
-        'default': 'Not find installPath in steam registry key',
+        'default': 'InstallPath was not found in steam registry key.',
         'ja_JP': 'SteamのレジストリキーにinstallPathが見つかりませんでした'
     },
     'ERR_NOT_EXIST_DEFAULT_STEAMAPPS_DIR': {
-        'default': 'Not exist default steamapps directory',
-        'ja_JP': 'デフォルトのsteamappsディレクトリがありません'
+        'default': 'Default steamapps folder was not found.',
+        'ja_JP': 'デフォルトのsteamappsフォルダが見つかりませんでした'
     },
     'ERR_INVALID_ACF': {
-        'default': 'Invalid acf file',
-        'ja_JP': 'acf fileが正しくありません'
+        'default': 'Invalid acf file.',
+        'ja_JP': 'acfファイルに問題が見つかりました'
     },
     'ERR_NOT_EXIST_GAME_INSTALL_DIR': {
-        'default': 'Not exist game install directory',
-        'ja_JP': 'ゲームのインストールディレクトリがありません'
+        'default': "Selected game's install folder was not found.",
+        'ja_JP': '選択したゲームのインストールフォルダが見つかりませんでした'
     },
     'ERR_NOT_FIND_TARGET_GAME_ON_YOUR_PC': {
-        'default': 'Not find target game on your PC',
-        'ja_JP': 'あなたのPCには該当のゲームはありません'
-    },
+        'default': 'Selected game was not found on your PC.',
+        'ja_JP': '選択したゲームがパソコンの中に見つかりませんでした'
+    }
 }
 
 
