@@ -1,8 +1,10 @@
+import concurrent.futures
 import json
 import os.path
 import re
 import subprocess as sb
 import tempfile
+import time
 import tkinter
 import tkinter.ttk as ttk
 import urllib.request
@@ -138,48 +140,36 @@ def install_key_file(save_file_path, mod_title, key_file_path):
 
 
 def dll_installer(app_id, target_zip, final_check_file):
-    try:
-        install_dir_path = get_game_install_dir_path(app_id)
+    install_dir_path = get_game_install_dir_path(app_id)
 
-        install(install_dir_path, target_zip, final_check_file)
-
-        messagebox.showinfo(_('SUCCESS_BOX_TITLE'), _('SUCCESS_BOX_MESSAGE'))
-
-    except Exception as exp:
-        messagebox.showerror(_('ERROR_BOX_TITLE'), _('ERROR_BOX_MESSAGE') + ":\n" + exp.args[0])
+    install(install_dir_path, target_zip, final_check_file)
 
 
 def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_list_url):
-    try:
-        # My Documents を環境変数から見つける
-        install_game_dir_path = __(os.getenv("HOMEDRIVE"),
-                                   os.getenv("HOMEPATH"),
-                                   "Documents",
-                                   "Paradox Interactive",
-                                   game_dir_name)
+    # My Documents を環境変数から見つける
+    install_game_dir_path = __(os.getenv("HOMEDRIVE"),
+                               os.getenv("HOMEPATH"),
+                               "Documents",
+                               "Paradox Interactive",
+                               game_dir_name)
 
-        # exeを見つける
-        install_dll_dir_path = get_game_install_dir_path(app_id)
+    # exeを見つける
+    install_dll_dir_path = get_game_install_dir_path(app_id)
 
-        # Modダウンローダーを配置
-        install_downloader(target_repository=target_repository,
-                           install_dir_path=install_game_dir_path)
+    # Modダウンローダーを配置
+    install_downloader(target_repository=target_repository,
+                       install_dir_path=install_game_dir_path)
 
-        # keyファイルを保存
-        os.makedirs(__(install_game_dir_path, 'claes.key'), exist_ok=True)
-        key_ids = json.loads(urllib.request.urlopen(key_list_url).read().decode('utf8'))
-        for item in key_ids:
-            install_key_file(save_file_path=__(install_game_dir_path, "claes.key", item.get("id") + ".key"),
-                             mod_title=item.get("name"),
-                             key_file_path=__(install_dll_dir_path, key_file_name))
+    # keyファイルを保存
+    os.makedirs(__(install_game_dir_path, 'claes.key'), exist_ok=True)
+    key_ids = json.loads(urllib.request.urlopen(key_list_url).read().decode('utf8'))
+    for item in key_ids:
+        install_key_file(save_file_path=__(install_game_dir_path, "claes.key", item.get("id") + ".key"),
+                         mod_title=item.get("name"),
+                         key_file_path=__(install_dll_dir_path, key_file_name))
 
-        # Modダウンローダーを起動
-        sb.call(__(install_game_dir_path, "claes.exe"))
-
-        messagebox.showinfo(_('SUCCESS_BOX_TITLE'), _('SUCCESS_BOX_MESSAGE'))
-
-    except Exception as exp:
-        messagebox.showerror(_('ERROR_BOX_TITLE'), _('ERROR_BOX_MESSAGE') + ":\n" + exp.args[0])
+    # Modダウンローダーを起動
+    sb.call(__(install_game_dir_path, "claes.exe"))
 
 
 def about():
@@ -187,6 +177,8 @@ def about():
 
 
 if __name__ == '__main__':
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
+
     root = tkinter.Tk()
     root.title(_('TITLE'))
 
@@ -211,21 +203,53 @@ if __name__ == '__main__':
     frame1_1 = tkinter.Frame(tab1, pady=0, relief='flat')
     frame1_1.pack(expand=True, fill='both')
 
-    dl_url = "https://github.com/matanki-saito/SimpleInstaller/file"
+    dl_url = "https://github.com/matanki-saito/SimpleInstaller/files/"
+
+
+    def on_enter(e, bg_color, font_color):
+        e.widget['background'] = bg_color
+        e.widget['fg'] = font_color
+
+
+    def on_leave(e, bg_color, font_color):
+        e.widget['background'] = bg_color
+        e.widget['fg'] = font_color
+
+
+    def threader(r, func):
+        original_text = r['text']
+        r['text'] = _('TASK_DO')
+
+        feature = executor.submit(func)
+
+        def done(self):
+            try:
+                self.result()
+                r['text'] = _('TASK_FINISH')
+                time.sleep(1)
+            except Exception as exp:
+                messagebox.showerror(_('ERROR_BOX_TITLE'), _('ERROR_BOX_MESSAGE') + ":\n" + str(exp))
+            finally:
+                r['text'] = original_text
+
+        feature.add_done_callback(done)
+
 
     # EU4
     eu4DllInstallButton = tkinter.Button(frame1_1,
-                                         activebackground='#e6b422',
-                                         background='#e6b422',
-                                         fg="#9a493f",
+                                         activebackground='#d3a243',
+                                         background='#d3a243',
+                                         fg="#8f2e14",
                                          relief='flat',
                                          text=_('INSTALL_EU4_MBDLL'),
-                                         command=lambda
-                                         : dll_installer(236850,
-                                                         dl_url + "2769846/eu4.zip",
-                                                         'eu4.exe'),
+                                         command=lambda: threader(eu4DllInstallButton, lambda: dll_installer(
+                                             236850,
+                                             dl_url + "2769846/eu4.zip",
+                                             'eu4.exe')),
                                          font=("sans-selif", 16, "bold"))
     eu4DllInstallButton.pack(expand=True, fill='both')
+    eu4DllInstallButton.bind("<Enter>", lambda e: on_enter(e, "#e6b422", "#9a493f"))
+    eu4DllInstallButton.bind("<Leave>", lambda e: on_leave(e, "#d3a243", "#8f2e14"))
 
     # CK2
     ck2DllInstallButton = tkinter.Button(frame1_1,
@@ -234,17 +258,19 @@ if __name__ == '__main__':
                                          fg='#c1e4e9',
                                          relief='flat',
                                          text=_('INSTALL_CK2_MBDLL'),
-                                         command=lambda
-                                         : dll_installer(203770,
-                                                         dl_url + "2769845/ck2.zip",
-                                                         'ck2game.exe'),
+                                         command=lambda: threader(ck2DllInstallButton, lambda: dll_installer(
+                                             203770,
+                                             dl_url + "2769845/ck2.zip",
+                                             'ck2game.exe')),
                                          font=("sans-selif", 16, "bold"))
     ck2DllInstallButton.pack(expand=True, fill='both')
+    ck2DllInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
+    ck2DllInstallButton.bind("<Leave>", lambda e: on_leave(e, "#2c4f54", "#c1e4e9"))
 
     # Install downloader and jpmod
     frame1_2 = tkinter.Frame(tab2, pady=0)
     frame1_2.pack(expand=True, fill='both')
-    repo_url = "https://raw.githubusercontent.com/matanki-saito/SimpleInstaller/"
+    repo_url = "https://raw.githubusercontent.com/matanki-saito/SimpleInstaller/master/"
 
     # EU4
     eu4ModInstallButton = tkinter.Button(frame1_2,
@@ -253,36 +279,40 @@ if __name__ == '__main__':
                                          relief='flat',
                                          fg="#8f2e14",
                                          text=_('INSTALL_EU4_JPMOD'),
-                                         command=lambda
-                                         : mod_installer(app_id=236850,
-                                                         target_repository={
-                                                             "author": "matanki-saito",
-                                                             "name": "moddownloader"
-                                                         },
-                                                         key_file_name='eu4.exe',
-                                                         game_dir_name="Europa Universalis IV",
-                                                         key_list_url=repo_url + "develop/eu4mods.json"),
+                                         command=lambda: threader(eu4ModInstallButton, lambda: mod_installer(
+                                             app_id=236850,
+                                             target_repository={
+                                                 "author": "matanki-saito",
+                                                 "name": "moddownloader"
+                                             },
+                                             key_file_name='eu4.exe',
+                                             game_dir_name="Europa Universalis IV",
+                                             key_list_url=repo_url + "eu4mods.json")),
                                          font=("sans-selif", 16, "bold"))
     eu4ModInstallButton.pack(expand=True, fill='both')
+    eu4ModInstallButton.bind("<Enter>", lambda e: on_enter(e, "#e6b422", "#9a493f"))
+    eu4ModInstallButton.bind("<Leave>", lambda e: on_leave(e, "#d3a243", "#8f2e14"))
 
     # CK2
     ck2ModInstallButton = tkinter.Button(frame1_2,
-                                         activebackground='#478384',
-                                         background='#478384',
+                                         activebackground='#2c4f54',
+                                         background='#2c4f54',
                                          relief='flat',
-                                         fg='#1f3134',
+                                         fg='#c1e4e9',
                                          text=_('INSTALL_CK2_JPMOD'),
-                                         command=lambda
-                                         : mod_installer(app_id=203770,
-                                                         target_repository={
-                                                             "author": "matanki-saito",
-                                                             "name": "moddownloader"
-                                                         },
-                                                         key_file_name='ck2game.exe',
-                                                         game_dir_name="Crusader Kings II",
-                                                         key_list_url=repo_url + "develop/ck2mods.json"),
+                                         command=lambda: threader(ck2ModInstallButton, lambda: mod_installer(
+                                             app_id=203770,
+                                             target_repository={
+                                                 "author": "matanki-saito",
+                                                 "name": "moddownloader"
+                                             },
+                                             key_file_name='ck2game.exe',
+                                             game_dir_name="Crusader Kings II",
+                                             key_list_url=repo_url + "ck2mods.json")),
                                          font=("sans-selif", 16, "bold"))
     ck2ModInstallButton.pack(expand=True, fill='both')
+    ck2ModInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
+    ck2ModInstallButton.bind("<Leave>", lambda e: on_leave(e, "#2c4f54", "#c1e4e9"))
 
     # Install MOD downloader and jpmod
     frame1_3 = tkinter.Frame(tab3, pady=0)

@@ -167,6 +167,20 @@ loca_dic = {
         'default': 'Install\nCK2 JPMODs',
         'ja_JP': 'CK2日本語化Mod\nインストール'
     },
+    'TASK_DO': {
+        'default': 'running...',
+        'ja_JP': '処理中...',
+        'zh_CN': '处理中',
+        'zh_TW': '處理中',
+        'ko_KR': '처리 중'
+    },
+    'TASK_FINISH': {
+        'default': 'finish',
+        'ja_JP': '処理終了',
+        'zh_CN': '处理结束',
+        'zh_TW': '處理結束',
+        'ko_KR': '처리 종료'
+    }
 }
 
 
