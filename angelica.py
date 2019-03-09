@@ -1,3 +1,4 @@
+import json
 import os.path
 import re
 import subprocess as sb
@@ -148,7 +149,7 @@ def dll_installer(app_id, target_zip, final_check_file):
         messagebox.showerror(_('ERROR_BOX_TITLE'), _('ERROR_BOX_MESSAGE') + ":\n" + exp.args[0])
 
 
-def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_ids):
+def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_list_url):
     try:
         # My Documents を環境変数から見つける
         install_game_dir_path = __(os.getenv("HOMEDRIVE"),
@@ -166,9 +167,10 @@ def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_i
 
         # keyファイルを保存
         os.makedirs(__(install_game_dir_path, 'claes.key'), exist_ok=True)
-        for tuple_data in key_ids:
-            install_key_file(save_file_path=__(install_game_dir_path, "claes.key", tuple_data[1] + ".key"),
-                             mod_title=tuple_data[0],
+        key_ids = json.loads(urllib.request.urlopen(key_list_url).read().decode('utf8'))
+        for item in key_ids:
+            install_key_file(save_file_path=__(install_game_dir_path, "claes.key", item.get("id") + ".key"),
+                             mod_title=item.get("name"),
                              key_file_path=__(install_dll_dir_path, key_file_name))
 
         # Modダウンローダーを起動
@@ -209,43 +211,47 @@ if __name__ == '__main__':
     frame1_1 = tkinter.Frame(tab1, pady=0, relief='flat')
     frame1_1.pack(expand=True, fill='both')
 
-    dl_url = "https://github.com/matanki-saito/SimpleInstaller/"
+    dl_url = "https://github.com/matanki-saito/SimpleInstaller/file"
 
     # EU4
     eu4DllInstallButton = tkinter.Button(frame1_1,
-                                         activebackground='#AF9F8E',
-                                         background='#AF9F8E',
+                                         activebackground='#e6b422',
+                                         background='#e6b422',
+                                         fg="#9a493f",
                                          relief='flat',
                                          text=_('INSTALL_EU4_MBDLL'),
                                          command=lambda
                                          : dll_installer(236850,
                                                          dl_url + "2769846/eu4.zip",
                                                          'eu4.exe'),
-                                         font=("Helvetica", 12))
+                                         font=("sans-selif", 16, "bold"))
     eu4DllInstallButton.pack(expand=True, fill='both')
 
     # CK2
     ck2DllInstallButton = tkinter.Button(frame1_1,
-                                         activebackground='#BFBD9F',
-                                         background='#BFBD9F',
+                                         activebackground='#2c4f54',
+                                         background='#2c4f54',
+                                         fg='#c1e4e9',
                                          relief='flat',
                                          text=_('INSTALL_CK2_MBDLL'),
                                          command=lambda
                                          : dll_installer(203770,
                                                          dl_url + "2769845/ck2.zip",
                                                          'ck2game.exe'),
-                                         font=("Helvetica", 12))
+                                         font=("sans-selif", 16, "bold"))
     ck2DllInstallButton.pack(expand=True, fill='both')
 
     # Install downloader and jpmod
     frame1_2 = tkinter.Frame(tab2, pady=0)
     frame1_2.pack(expand=True, fill='both')
+    repo_url = "https://raw.githubusercontent.com/matanki-saito/SimpleInstaller/"
 
     # EU4
     eu4ModInstallButton = tkinter.Button(frame1_2,
-                                         activebackground='#7A7069',
-                                         background='#7A7069',
+                                         activebackground='#d3a243',
+                                         background='#d3a243',
                                          relief='flat',
+                                         fg="#8f2e14",
                                          text=_('INSTALL_EU4_JPMOD'),
                                          command=lambda
                                          : mod_installer(app_id=236850,
@@ -255,15 +261,16 @@ if __name__ == '__main__':
                                                          },
                                                          key_file_name='eu4.exe',
                                                          game_dir_name="Europa Universalis IV",
-                                                         key_ids=[]),
-                                         font=("Helvetica", 12))
+                                                         key_list_url=repo_url + "develop/eu4mods.json"),
+                                         font=("sans-selif", 16, "bold"))
     eu4ModInstallButton.pack(expand=True, fill='both')
 
     # CK2
     ck2ModInstallButton = tkinter.Button(frame1_2,
-                                         activebackground='#504D3E',
-                                         background='#504D3E',
+                                         activebackground='#478384',
+                                         background='#478384',
                                          relief='flat',
+                                         fg='#1f3134',
                                          text=_('INSTALL_CK2_JPMOD'),
                                          command=lambda
                                          : mod_installer(app_id=203770,
@@ -273,8 +280,8 @@ if __name__ == '__main__':
                                                          },
                                                          key_file_name='ck2game.exe',
                                                          game_dir_name="Crusader Kings II",
-                                                         key_list_url="ck2mods.json"),
-                                         font=("Helvetica", 12))
+                                                         key_list_url=repo_url + "develop/ck2mods.json"),
+                                         font=("sans-selif", 16, "bold"))
     ck2ModInstallButton.pack(expand=True, fill='both')
 
     # Install MOD downloader and jpmod

@@ -41,18 +41,18 @@ loca_dic = {
     },
     'INSTALL_CK2_MBDLL': {
         'default': 'Install CK2 Multibyte DLL',
-        'ja_JP': 'CK2日本語化DLLをインストール',
-        'zh_CN': '安装CK2 Multibyte DLL',
-        'zh_TW': '安裝CK2 Multibyte DLL',
+        'ja_JP': 'CK2日本語化DLL\nインストール',
+        'zh_CN': '安装\nCK2 Multibyte DLL',
+        'zh_TW': '安裝\nCK2 Multibyte DLL',
         'ko_KR': 'CK2 멀티 바이트 DLL 설치',
         'de_DE': 'Installieren Sie die CK2-Multibyte-DLL'
     },
     'INSTALL_EU4_MBDLL': {
-        'default': 'Install EU4 Multibyte DLL',
-        'ja_JP': 'EU4日本語化DLLをインストール',
-        'zh_CN': '安装EU4 Multibyte DLL',
-        'zh_TW': '安裝EU4 Multibyte DLL',
-        'ko_KR': 'EU4 멀티 바이트 DLL 설치',
+        'default': 'Install\n EU4 Multibyte DLL',
+        'ja_JP': 'EU4日本語化DLL\nインストール',
+        'zh_CN': '安装\nEU4 DLL',
+        'zh_TW': '安裝\nEU4 DLL',
+        'ko_KR': 'EU4 멀티 바이트\nDLL 설치',
         'de_DE': 'Installieren Sie die EU4-Multibyte-DLL'
     },
     'TITLE': {
@@ -159,13 +159,13 @@ loca_dic = {
         'de_DE': 'Über'
     },
     'INSTALL_EU4_JPMOD': {
-        'default': 'Install EU4 JPMODs',
-        'ja_JP': 'EU4日本語化Modをインストール'
+        'default': 'Install\nEU4 JPMODs',
+        'ja_JP': 'EU4日本語化Mod\nインストール'
     },
 
     'INSTALL_CK2_JPMOD': {
-        'default': 'Install CK2 JPMODs',
-        'ja_JP': 'CK2日本語化Modをインストール'
+        'default': 'Install\nCK2 JPMODs',
+        'ja_JP': 'CK2日本語化Mod\nインストール'
     },
 }
 
