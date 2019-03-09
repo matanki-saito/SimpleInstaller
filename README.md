@@ -19,7 +19,7 @@ Install jp-mods and mod-downloader
 ### command
 
 ```
-pyinstaller python installer.py --onefile --noconsole --icon=./icon.ico
+pyinstaller ./angelica.py -n installer --onefile --noconsole --icon=./icon.ico
 ```
 
 ## Usage
