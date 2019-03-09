@@ -9,7 +9,7 @@ Install [eu4dll](https://github.com/matanki-saito/EU4dll) or [ck2dll](https://gi
 ## Build
 ### Requirement
  - windows 10 or later
- - python 3.6 or later
+ - python 3.7 or later
  - pyinstaller ```pip install pyinstaller```
 ### command
 
