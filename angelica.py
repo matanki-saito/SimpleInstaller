@@ -10,11 +10,31 @@ import tkinter.ttk as ttk
 import urllib.request
 import winreg
 import zipfile
+import shutil
 from os.path import join as __
 from tkinter import messagebox
 
 from github_tool import download_asset_from_github
 from loca import _
+
+
+def remove_util(path):
+    """
+    ファイルだろうがディレクトリだが存在すればお構いなしに削除する関数
+    :param path: パス
+    :return: 成否
+    """
+
+    if not os.path.exists(path):
+        return False
+
+    if os.path.isfile(path):
+        os.remove(path)
+
+    elif os.path.isdir(path):
+        shutil.rmtree(path)
+
+    return True
 
 
 def install(install_dir_path, target_zip_url, final_check_file):
@@ -141,8 +161,29 @@ def install_key_file(save_file_path, mod_title, key_file_path):
 
 def dll_installer(app_id, target_zip, final_check_file):
     install_dir_path = get_game_install_dir_path(app_id)
-
     install(install_dir_path, target_zip, final_check_file)
+
+
+def all_uninstaller(uninstall_info_list):
+    for info in uninstall_info_list:
+        final_check_file = info['final_check_file']
+        remove_target_paths = info['remove_target_paths']
+
+        base_path = '.'
+
+        if 'app_id' in info:
+            base_path = get_game_install_dir_path(info['app_id'])
+        elif 'game_dir_name' in info:
+            base_path = __(get_my_documents_folder(),
+                           "Paradox Interactive",
+                           info['game_dir_name'])
+
+        # 最終チェックファイルがあるかを確認する。このファイルがあるかどうかで本当にインストールされているか判断する
+        if os.path.exists(__(base_path, final_check_file)) is False:
+            raise Exception(_('ERR_NOT_EXIST_FINAL_CHECK_FILE'))
+
+        for path in remove_target_paths:
+            remove_util(__(base_path, path))
 
 
 def get_my_documents_folder():
@@ -162,7 +203,7 @@ def get_my_documents_folder():
 
 
 def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_list_url):
-    # My Documents を環境変数から見つける
+    # My Documents をレジストリから見つける
     install_game_dir_path = __(get_my_documents_folder(),
                                "Paradox Interactive",
                                game_dir_name)
@@ -328,16 +369,70 @@ if __name__ == '__main__':
     ck2ModInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
     ck2ModInstallButton.bind("<Leave>", lambda e: on_leave(e, "#2c4f54", "#c1e4e9"))
 
-    # Install MOD downloader and jpmod
+    # その他
     frame1_3 = tkinter.Frame(tab3, pady=0)
     frame1_3.pack(expand=True, fill='both')
 
-    aboutButton = tkinter.Button(frame1_3,
-                                 background='#443648',
-                                 fg='white',
-                                 text=_('ABOUT'),
-                                 command=about,
-                                 height='1',
-                                 font=("Helvetica", 12))
-    aboutButton.pack(expand=True, fill='both')
+    about_button = tkinter.Button(frame1_3,
+                                  background='#443648',
+                                  fg='white',
+                                  text=_('ABOUT'),
+                                  command=about,
+                                  height='1',
+                                  font=("Helvetica", 12))
+    about_button.pack(expand=True, fill='both')
+
+    uninstall_button = tkinter.Button(frame1_3,
+                                      background='#FFFFFF',
+                                      fg='black',
+                                      text=_('ALL_UNINSTALL'),
+                                      command=lambda: threader(uninstall_button, lambda: all_uninstaller(
+                                          [
+                                              {
+                                                  # CK2 DLL
+                                                  'app_id': 203770,
+                                                  'final_check_file':  'ck2game.exe',
+                                                  'remove_target_paths': [
+                                                      'd3d9.dll',
+                                                      'plugins',
+                                                      'pattern_ck2jps.log'
+                                                  ]
+                                              },
+                                              {
+                                                  # CK2 MOD
+                                                  'game_dir_name': 'Crusader Kings II',
+                                                  'final_check_file':  'settings.txt',
+                                                  'remove_target_paths': [
+                                                      'claes.exe',
+                                                      'claes.key',
+                                                      'claes.cache'
+                                                  ]
+                                              },
+                                              {
+                                                  # EU4
+                                                  'app_id': 236850,
+                                                  'final_check_file':  'eu4.exe',
+                                                  'remove_target_paths': [
+                                                      'd3d9.dll',
+                                                      'plugins',
+                                                      'pattern_eu4jps.log',
+                                                      'README.md'
+                                                  ]
+                                              },
+                                              {
+                                                  # EU4 MOD
+                                                  'game_dir_name': 'Europa Universalis IV',
+                                                  'final_check_file':  'settings.txt',
+                                                  'remove_target_paths': [
+                                                      'claes.exe',
+                                                      'claes.key',
+                                                      'claes.cache'
+                                                  ]
+                                              },
+                                          ])),
+                                      height='1',
+                                      font=("Helvetica", 12))
+    uninstall_button.pack(expand=True, fill='both')
+
+    # main
     root.mainloop()
