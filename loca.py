@@ -39,6 +39,14 @@ loca_dic = {
         'ko_KR': '이 소프트웨어에 대한',
         'de_DE': 'Über'
     },
+    'ALL_UNINSTALL': {
+        'default': 'All uninstall',
+        'ja_JP': 'すべてアンインストール',
+        'zh_CN': '全部卸载',
+        'zh_TW': '全部卸載',
+        'ko_KR': '모두 제거',
+        'de_DE': 'Alle deinstallieren'
+    },
     'INSTALL_CK2_MBDLL': {
         'default': 'Install CK2 Multibyte DLL',
         'ja_JP': 'CK2日本語化DLL\nインストール',
