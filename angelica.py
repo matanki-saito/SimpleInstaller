@@ -302,7 +302,7 @@ if __name__ == '__main__':
                                          text=_('INSTALL_EU4_MBDLL'),
                                          command=lambda: threader(eu4DllInstallButton, lambda: dll_installer(
                                              236850,
-                                             dl_url + "2769846/eu4.zip",
+                                             dl_url + "3220225/eu4_new.zip",
                                              'eu4.exe')),
                                          font=("sans-selif", 16, "bold"))
     eu4DllInstallButton.pack(expand=True, fill='both')
@@ -318,7 +318,7 @@ if __name__ == '__main__':
                                          text=_('INSTALL_CK2_MBDLL'),
                                          command=lambda: threader(ck2DllInstallButton, lambda: dll_installer(
                                              203770,
-                                             dl_url + "2769845/ck2.zip",
+                                             dl_url + "3220224/ck2_new.zip",
                                              'ck2game.exe')),
                                          font=("sans-selif", 16, "bold"))
     ck2DllInstallButton.pack(expand=True, fill='both')
@@ -394,7 +394,7 @@ if __name__ == '__main__':
                                               {
                                                   # CK2 DLL
                                                   'app_id': 203770,
-                                                  'final_check_file':  'ck2game.exe',
+                                                  'final_check_file': 'ck2game.exe',
                                                   'remove_target_paths': [
                                                       'd3d9.dll',
                                                       'plugins',
@@ -404,7 +404,7 @@ if __name__ == '__main__':
                                               {
                                                   # CK2 MOD
                                                   'game_dir_name': 'Crusader Kings II',
-                                                  'final_check_file':  'settings.txt',
+                                                  'final_check_file': 'settings.txt',
                                                   'remove_target_paths': [
                                                       'claes.exe',
                                                       'claes.key',
@@ -414,7 +414,7 @@ if __name__ == '__main__':
                                               {
                                                   # EU4
                                                   'app_id': 236850,
-                                                  'final_check_file':  'eu4.exe',
+                                                  'final_check_file': 'eu4.exe',
                                                   'remove_target_paths': [
                                                       'd3d9.dll',
                                                       'plugins',
@@ -425,7 +425,7 @@ if __name__ == '__main__':
                                               {
                                                   # EU4 MOD
                                                   'game_dir_name': 'Europa Universalis IV',
-                                                  'final_check_file':  'settings.txt',
+                                                  'final_check_file': 'settings.txt',
                                                   'remove_target_paths': [
                                                       'claes.exe',
                                                       'claes.key',
