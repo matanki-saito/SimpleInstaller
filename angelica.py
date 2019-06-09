@@ -11,6 +11,10 @@ import urllib.request
 import winreg
 import zipfile
 import shutil
+import tkinter.simpledialog as simpledialog
+import ctypes
+from ctypes.wintypes import MAX_PATH
+
 from os.path import join as __
 from tkinter import messagebox
 
@@ -190,23 +194,16 @@ def all_uninstaller(uninstall_info_list):
 
 
 def get_my_documents_folder():
-    # レジストリを見て、探す
-    try:
-        my_documents_key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                                          "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders")
-    except OSError:
-        raise Exception(_("ERR_NOT_FIND_MY_DOCUMENTS"))
-
-    try:
-        my_documents_path, key_type = winreg.QueryValueEx(my_documents_key, "Personal")
-    except FileNotFoundError:
-        raise Exception(_("ERR_NOT_FIND_MY_DOCUMENTS_IN_REGKEY"))
-
-    return my_documents_path
+    # APIを使って探す
+    buf = ctypes.create_unicode_buffer(MAX_PATH + 1)
+    if ctypes.windll.shell32.SHGetSpecialFolderPathW(None, buf, 0x0005, False):
+        return buf.value
+    else:
+        raise Exception(_("ERR_SHGetSpecialFolderPathW"))
 
 
 def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_list_url):
-    # My Documents をレジストリから見つける
+    # My Documents をAPIから見つける
     install_game_dir_path = __(get_my_documents_folder(),
                                "Paradox Interactive",
                                game_dir_name)
