@@ -57,6 +57,9 @@ def install_downloader(target_repository, install_dir_path):
         repository_name=target_repository.get("name"),
         out_file_path=__(tempfile.mkdtemp(), "a.zip")
     )
+
+    installLog.insert('end', 'アセットファイルパスを取得:' + asset_file_path + '\n')
+
     with zipfile.ZipFile(asset_file_path) as existing_zip:
         existing_zip.extractall(install_dir_path)
 
@@ -203,28 +206,43 @@ def get_my_documents_folder():
 
 
 def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_list_url):
+    installLog.insert('end', 'Modインストール開始\n')
+
     # My Documents をAPIから見つける
     install_game_dir_path = __(get_my_documents_folder(),
                                "Paradox Interactive",
                                game_dir_name)
 
+    installLog.insert('end', 'マイドキュメントの位置を取得:' + install_game_dir_path + '\n')
+
     # exeを見つける
     install_dll_dir_path = get_game_install_dir_path(app_id)
+
+    installLog.insert('end', 'exeの位置を取得' + install_dll_dir_path + '\n')
 
     # Modダウンローダーを配置
     install_downloader(target_repository=target_repository,
                        install_dir_path=install_game_dir_path)
 
+    installLog.insert('end', 'Modダウンローダーを配置\n')
+
     # keyファイルを保存
     os.makedirs(__(install_game_dir_path, 'claes.key'), exist_ok=True)
+    installLog.insert('end', 'claes.keyフォルダを作成\n')
+
     key_ids = json.loads(urllib.request.urlopen(key_list_url).read().decode('utf8'))
+    installLog.insert('end', 'keyファイルをダウンロード\n')
+
     for item in key_ids:
         install_key_file(save_file_path=__(install_game_dir_path, "claes.key", item.get("id") + ".key"),
                          mod_title=item.get("name"),
                          key_file_path=__(install_dll_dir_path, key_file_name))
 
     # Modダウンローダーを起動
+    installLog.insert('end', 'Modダウンローダーを起動\n')
     sb.call(__(install_game_dir_path, "claes.exe"))
+
+    installLog.insert('end', 'インストール処理終了\n')
 
 
 def about():
@@ -272,22 +290,31 @@ if __name__ == '__main__':
 
 
     def threader(r, func):
+        installLog.insert('end', '処理開始\n')
+
         original_text = r['text']
         r['text'] = _('TASK_DO')
+
+        installLog.insert('end', '「処理中」にラベルを変更\n')
 
         feature = executor.submit(func)
 
         def done(self):
+            installLog.insert('end', '処理終了\n')
             try:
                 self.result()
                 r['text'] = _('TASK_FINISH')
+                installLog.insert('end', '「処理終了」にラベルを変更\n')
+
                 time.sleep(1)
+                installLog.insert('end', '１秒のスリープを終了\n')
             except Exception as exp:
                 messagebox.showerror(_('ERROR_BOX_TITLE'), _('ERROR_BOX_MESSAGE') + ":\n" + str(exp))
             finally:
                 r['text'] = original_text
 
         feature.add_done_callback(done)
+        installLog.insert('end', 'コールバック関数登録終了\n')
 
 
     # EU4
@@ -368,6 +395,9 @@ if __name__ == '__main__':
     ck2ModInstallButton.pack(expand=True, fill='both')
     ck2ModInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
     ck2ModInstallButton.bind("<Leave>", lambda e: on_leave(e, "#2c4f54", "#c1e4e9"))
+
+    installLog = tkinter.Text(frame1_2)
+    installLog.pack(expand=True, fill='both')
 
     # その他
     frame1_3 = tkinter.Frame(tab3, pady=0)
