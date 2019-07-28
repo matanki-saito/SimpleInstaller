@@ -118,7 +118,7 @@ def get_game_install_dir(dir_path, target_app_id):
     # acfファイルにある"installdir" "xxxx"をさがす
     install_dir_pattern = re.compile(r'\s*"installdir"\s+"(.*)')
     game_install_dir_name = None
-    with open(target_app_acf_path, 'r') as target_app_acf_file:
+    with open(target_app_acf_path, mode='r', encoding="utf8") as target_app_acf_file:
         for line in target_app_acf_file:
             result = install_dir_pattern.match(line)
             if result is not None:
@@ -146,7 +146,7 @@ def get_lib_folders_from_vdf(steam_apps_path):
     # vdfファイルにある"[数字]" "xxxx"をさがす
     install_dir_pattern = re.compile(r'\s*"[0-9]+"\s+"(.*)')
     game_libs_paths = []
-    with open(library_folders_vdf_path, 'r') as target_vdf_file:
+    with open(library_folders_vdf_path, mode='r', encoding="utf8") as target_vdf_file:
         for line in target_vdf_file:
             result = install_dir_pattern.match(line)
             if result is not None:
