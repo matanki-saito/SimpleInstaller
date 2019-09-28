@@ -2,18 +2,16 @@ import json
 import urllib.request
 
 
-def download_asset_from_github(repository_author,
-                               repository_name,
-                               out_file_path,
-                               release_tag=None,
-                               file_name=None):
+def download_asset_url_from_github(repository_author,
+                                   repository_name,
+                                   release_tag=None,
+                                   file_name=None):
     """
     githubからアセットをダウンロード。未指定の場合は最新を取得
     :param repository_author:
     :param repository_name:
     :param release_tag:
     :param file_name:
-    :param out_file_path:
     :return:
     """
     api_base_url = "https://api.github.com/repos/{}/{}".format(repository_author, repository_name)
@@ -28,12 +26,24 @@ def download_asset_from_github(repository_author,
         content = json.loads(response.read().decode('utf8'))
         file_name = content["assets"][0]["name"]
 
-    request_url = "{}/{}/{}/releases/download/{}/{}".format("https://github.com",
-                                                            repository_author,
-                                                            repository_name,
-                                                            release_tag,
-                                                            file_name
-                                                            )
+    return "{}/{}/{}/releases/download/{}/{}".format("https://github.com",
+                                                     repository_author,
+                                                     repository_name,
+                                                     release_tag,
+                                                     file_name
+                                                     )
+
+
+def download_asset_from_github(repository_author,
+                               repository_name,
+                               out_file_path,
+                               release_tag=None,
+                               file_name=None):
+    request_url = download_asset_url_from_github(repository_author,
+                                                 repository_name,
+                                                 release_tag,
+                                                 file_name)
+
     req = urllib.request.Request(request_url)
 
     with open(out_file_path, "wb") as my_file:
