@@ -1,7 +1,9 @@
 import concurrent.futures
+import ctypes
 import json
 import os.path
 import re
+import shutil
 import subprocess as sb
 import tempfile
 import time
@@ -10,15 +12,11 @@ import tkinter.ttk as ttk
 import urllib.request
 import winreg
 import zipfile
-import shutil
-import tkinter.simpledialog as simpledialog
-import ctypes
 from ctypes.wintypes import MAX_PATH
-
 from os.path import join as __
 from tkinter import messagebox
 
-from github_tool import download_asset_from_github
+from github_tool import download_asset_from_github, download_asset_url_from_github
 from loca import _
 
 
@@ -163,9 +161,16 @@ def install_key_file(save_file_path, mod_title, key_file_path):
         ]))
 
 
-def dll_installer(app_id, target_zip, final_check_file):
+def dll_installer(app_id, final_check_file, target_zip_url=None, target_repository=None):
     install_dir_path = get_game_install_dir_path(app_id)
-    install(install_dir_path, target_zip, final_check_file)
+    if target_zip_url is not None:
+        src_url = target_zip_url
+    else:
+        src_url = download_asset_url_from_github(
+            repository_author=target_repository.get("author"),
+            repository_name=target_repository.get("name")
+        )
+    install(install_dir_path, src_url, final_check_file)
 
 
 def all_uninstaller(uninstall_info_list):
@@ -298,9 +303,13 @@ if __name__ == '__main__':
                                          relief='flat',
                                          text=_('INSTALL_EU4_MBDLL'),
                                          command=lambda: threader(eu4DllInstallButton, lambda: dll_installer(
-                                             236850,
-                                             dl_url + "3220225/eu4_new.zip",
-                                             'eu4.exe')),
+                                             app_id=236850,
+                                             final_check_file='eu4.exe',
+                                             target_repository={
+                                                 "author": "matanki-saito",
+                                                 "name": "eu4dll"
+                                             },
+                                         )),
                                          font=("sans-selif", 16, "bold"))
     eu4DllInstallButton.pack(expand=True, fill='both')
     eu4DllInstallButton.bind("<Enter>", lambda e: on_enter(e, "#e6b422", "#9a493f"))
@@ -314,9 +323,9 @@ if __name__ == '__main__':
                                          relief='flat',
                                          text=_('INSTALL_CK2_MBDLL'),
                                          command=lambda: threader(ck2DllInstallButton, lambda: dll_installer(
-                                             203770,
-                                             dl_url + "3220224/ck2_new.zip",
-                                             'ck2game.exe')),
+                                             app_id=203770,
+                                             target_zip_url=dl_url + "3220224/ck2_new.zip",
+                                             final_check_file='ck2game.exe')),
                                          font=("sans-selif", 16, "bold"))
     ck2DllInstallButton.pack(expand=True, fill='both')
     ck2DllInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
