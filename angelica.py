@@ -403,8 +403,12 @@ if __name__ == '__main__':
                                                   'final_check_file': 'ck2game.exe',
                                                   'remove_target_paths': [
                                                       'd3d9.dll',
+                                                      'version.dll',
                                                       'plugins',
-                                                      'pattern_ck2jps.log'
+                                                      'pattern_ck2jps.log',
+                                                      'pattern_ck2_jps_2.log',
+                                                      'README.md',
+                                                      '.dist.v1.json'
                                                   ]
                                               },
                                               {
@@ -423,9 +427,12 @@ if __name__ == '__main__':
                                                   'final_check_file': 'eu4.exe',
                                                   'remove_target_paths': [
                                                       'd3d9.dll',
+                                                      'version.dll',
                                                       'plugins',
                                                       'pattern_eu4jps.log',
-                                                      'README.md'
+                                                      'pattern_eu4_jps_2.log',
+                                                      'README.md',
+                                                      '.dist.v1.json'
                                                   ]
                                               },
                                               {
