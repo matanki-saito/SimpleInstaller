@@ -47,6 +47,14 @@ loca_dic = {
         'ko_KR': '모두 제거',
         'de_DE': 'Alle deinstallieren'
     },
+    'UNINSTALL_EU4': {
+        'default': 'Uninstall a EU4 multibyte dll and mods',
+        'ja_JP': 'アンインストール\n・EU4日本語DLL\n・関連MOD',
+    },
+    'UNINSTALL_CK2': {
+        'default': 'Uninstall a CK2 multibyte dll',
+        'ja_JP': 'アンインストール\n・CK2日本語DLL',
+    },
     'INSTALL_CK2_MBDLL': {
         'default': 'Install CK2 Multibyte DLL',
         'ja_JP': 'CK2日本語化DLL\nインストール',

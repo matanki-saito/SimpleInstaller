@@ -173,7 +173,7 @@ def dll_installer(app_id, final_check_file, target_zip_url=None, target_reposito
     install(install_dir_path, src_url, final_check_file)
 
 
-def all_uninstaller(uninstall_info_list):
+def uninstaller(uninstall_info_list):
     for info in uninstall_info_list:
         final_check_file = info['final_check_file']
         remove_target_paths = info['remove_target_paths']
@@ -391,64 +391,76 @@ if __name__ == '__main__':
                                   font=("Helvetica", 12))
     about_button.pack(expand=True, fill='both')
 
-    uninstall_button = tkinter.Button(frame1_3,
-                                      background='#FFFFFF',
-                                      fg='black',
-                                      text=_('ALL_UNINSTALL'),
-                                      command=lambda: threader(uninstall_button, lambda: all_uninstaller(
-                                          [
-                                              {
-                                                  # CK2 DLL
-                                                  'app_id': 203770,
-                                                  'final_check_file': 'ck2game.exe',
-                                                  'remove_target_paths': [
-                                                      'd3d9.dll',
-                                                      'version.dll',
-                                                      'plugins',
-                                                      'pattern_ck2jps.log',
-                                                      'pattern_ck2_jps_2.log',
-                                                      'README.md',
-                                                      '.dist.v1.json'
-                                                  ]
-                                              },
-                                              {
-                                                  # CK2 MOD
-                                                  'game_dir_name': 'Crusader Kings II',
-                                                  'final_check_file': 'settings.txt',
-                                                  'remove_target_paths': [
-                                                      'claes.exe',
-                                                      'claes.key',
-                                                      'claes.cache'
-                                                  ]
-                                              },
-                                              {
-                                                  # EU4
-                                                  'app_id': 236850,
-                                                  'final_check_file': 'eu4.exe',
-                                                  'remove_target_paths': [
-                                                      'd3d9.dll',
-                                                      'version.dll',
-                                                      'plugins',
-                                                      'pattern_eu4jps.log',
-                                                      'pattern_eu4_jps_2.log',
-                                                      'README.md',
-                                                      '.dist.v1.json'
-                                                  ]
-                                              },
-                                              {
-                                                  # EU4 MOD
-                                                  'game_dir_name': 'Europa Universalis IV',
-                                                  'final_check_file': 'settings.txt',
-                                                  'remove_target_paths': [
-                                                      'claes.exe',
-                                                      'claes.key',
-                                                      'claes.cache'
-                                                  ]
-                                              },
-                                          ])),
-                                      height='1',
-                                      font=("Helvetica", 12))
-    uninstall_button.pack(expand=True, fill='both')
+    uninstall_button_eu4 = tkinter.Button(frame1_3,
+                                          background='#FFFFFF',
+                                          fg='black',
+                                          text=_('UNINSTALL_EU4'),
+                                          command=lambda: threader(uninstall_button_eu4, lambda: uninstaller(
+                                              [
+                                                  {
+                                                      # EU4 DLL
+                                                      'app_id': 236850,
+                                                      'final_check_file': 'eu4.exe',
+                                                      'remove_target_paths': [
+                                                          'd3d9.dll',
+                                                          'version.dll',
+                                                          'plugins',
+                                                          'pattern_eu4jps.log',
+                                                          'README.md'
+                                                          'pattern_eu4_jps_2.log',
+                                                          'README.md',
+                                                          '.dist.v1.json'
+                                                      ]
+                                                  },
+                                                  {
+                                                      # EU4 MOD
+                                                      'game_dir_name': 'Europa Universalis IV',
+                                                      'final_check_file': 'settings.txt',
+                                                      'remove_target_paths': [
+                                                          'claes.exe',
+                                                          'claes.key',
+                                                          'claes.cache'
+                                                      ]
+                                                  }
+                                              ])),
+                                          height='1',
+                                          font=("Helvetica", 12))
+    uninstall_button_eu4.pack(expand=True, fill='both')
+
+    uninstall_button_ck2 = tkinter.Button(frame1_3,
+                                          background='#FFFFFF',
+                                          fg='black',
+                                          text=_('UNINSTALL_CK2'),
+                                          command=lambda: threader(uninstall_button_ck2, lambda: uninstaller(
+                                              [
+                                                  {
+                                                      # CK2 DLL
+                                                      'app_id': 203770,
+                                                      'final_check_file': 'ck2game.exe',
+                                                      'remove_target_paths': [
+                                                          'd3d9.dll',
+                                                          'version.dll',
+                                                          'plugins',
+                                                          'pattern_ck2jps.log',
+                                                          'pattern_ck2_jps_2.log',
+                                                          'README.md',
+                                                          '.dist.v1.json'
+                                                      ]
+                                                  },
+                                                  {
+                                                      # CK2 MOD
+                                                      'game_dir_name': 'Crusader Kings II',
+                                                      'final_check_file': 'settings.txt',
+                                                      'remove_target_paths': [
+                                                          'claes.exe',
+                                                          'claes.key',
+                                                          'claes.cache'
+                                                      ]
+                                                  }
+                                              ])),
+                                          height='1',
+                                          font=("Helvetica", 12))
+    uninstall_button_ck2.pack(expand=True, fill='both')
 
     # main
     root.mainloop()
