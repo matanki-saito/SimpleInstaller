@@ -324,8 +324,12 @@ if __name__ == '__main__':
                                          text=_('INSTALL_CK2_MBDLL'),
                                          command=lambda: threader(ck2DllInstallButton, lambda: dll_installer(
                                              app_id=203770,
-                                             target_zip_url=dl_url + "3220224/ck2_new.zip",
-                                             final_check_file='ck2game.exe')),
+                                             final_check_file='ck2game.exe',
+                                             target_repository={
+                                                 "author": "matanki-saito",
+                                                 "name": "ck2dll"
+                                             },
+                                         )),
                                          font=("sans-selif", 16, "bold"))
     ck2DllInstallButton.pack(expand=True, fill='both')
     ck2DllInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
