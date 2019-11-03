@@ -53,7 +53,7 @@ loca_dic = {
     },
     'UNINSTALL_CK2': {
         'default': 'Uninstall a CK2 multibyte dll',
-        'ja_JP': 'アンインストール\n・CK2日本語DLL',
+        'ja_JP': 'アンインストール\n・CK2日本語DLL\n・関連MOD',
     },
     'INSTALL_CK2_MBDLL': {
         'default': 'Install CK2 Multibyte DLL',
