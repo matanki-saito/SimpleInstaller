@@ -46,7 +46,7 @@ def download_asset_from_github(repository_author,
 
     req = urllib.request.Request(request_url)
 
-    with open(out_file_path, "wb") as my_file:
+    with open(out_file_path, "wb", errors='ignore') as my_file:
         my_file.write(urllib.request.urlopen(req).read())
 
     return out_file_path
