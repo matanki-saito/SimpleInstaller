@@ -1,6 +1,7 @@
 import concurrent.futures
 import ctypes
 import json
+import logging
 import os.path
 import re
 import shutil
@@ -27,6 +28,8 @@ def remove_util(path):
     :return: 成否
     """
 
+    logging.info('remove files, path=%s', path)
+
     if not os.path.exists(path):
         return False
 
@@ -40,26 +43,49 @@ def remove_util(path):
 
 
 def install(install_dir_path, target_zip_url, final_check_file):
+    logging.info('install')
+
+    final_check_file_path = __(install_dir_path, final_check_file)
+    logging.info('final_check_file_path=%s', final_check_file_path)
+
     # 最終チェックファイルがあるかを確認する
-    if os.path.exists(__(install_dir_path, final_check_file)) is False:
+    if os.path.exists(final_check_file_path) is False:
         raise Exception(_('ERR_NOT_EXIST_FINAL_CHECK_FILE'))
 
+    # 最終チェックファイルがある場所に対してファイルを展開する
+    final_check_file_dir = os.path.dirname(final_check_file_path)
+    logging.info('final_check_file_dir=%s', final_check_file_dir)
+
     path, headers = urllib.request.urlretrieve(target_zip_url)
+
+    logging.info('path=%s,headers=%s', path, headers)
+
     with zipfile.ZipFile(path) as existing_zip:
-        existing_zip.extractall(install_dir_path)
+        existing_zip.extractall(final_check_file_dir)
+
+    logging.info('zip unpacked')
 
 
 def install_downloader(target_repository, install_dir_path):
-    asset_file_path = download_asset_from_github(
-        repository_author=target_repository.get("author"),
-        repository_name=target_repository.get("name"),
-        out_file_path=__(tempfile.mkdtemp(), "a.zip")
-    )
-    with zipfile.ZipFile(asset_file_path) as existing_zip:
-        existing_zip.extractall(install_dir_path)
+    logging.info('install downloader')
+
+    with tempfile.TemporaryFile() as w:
+        download_asset_from_github(
+            repository_author=target_repository.get("author"),
+            repository_name=target_repository.get("name"),
+            out_file=w
+        )
+
+        logging.info('asset_file_path=%s', w)
+
+        with zipfile.ZipFile(w) as existing_zip:
+            existing_zip.extractall(install_dir_path)
+
+    logging.info('zip unpacked')
 
 
 def get_game_install_dir_path(target_app_id):
+    logging.info('Get install dir path')
     # レジストリを見て、Steamのインストール先を探す
     # 32bitを見て、なければ64bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
     try:
@@ -70,12 +96,15 @@ def get_game_install_dir_path(target_app_id):
         except OSError:
             raise Exception(_("ERR_NOT_FIND_STEAM_REGKEY"))
 
+    logging.info('Find steam_install_key in reg')
+
     try:
         steam_install_path, key_type = winreg.QueryValueEx(steam_install_key, "InstallPath")
     except FileNotFoundError:
         raise Exception(_("ERR_NOT_FIND_INSTALLPATH_IN_STEAM_REGKEY"))
 
     steam_install_key.Close()
+    logging.info('steam_install_path=%s, key_type=%s', steam_install_path, key_type)
 
     # 基本問題ないと思うが念の為
     if key_type != winreg.REG_SZ:
@@ -86,9 +115,13 @@ def get_game_install_dir_path(target_app_id):
     if os.path.exists(steam_apps_path) is False:
         raise Exception(_("ERR_NOT_EXIST_DEFAULT_STEAMAPPS_DIR"))
 
+    logging.info('steam_apps_path=%s', steam_apps_path)
+
     # acfがあるフォルダを列挙
     acf_dir_paths = [steam_apps_path]
     acf_dir_paths.extend(get_lib_folders_from_vdf(steam_apps_path))
+
+    logging.info('acf_dir_paths=%s', acf_dir_paths)
 
     # 各ディレクトリについて処理
     game_install_dir_path = None
@@ -99,6 +132,8 @@ def get_game_install_dir_path(target_app_id):
         else:
             break
 
+    logging.info('game_install_dir_path=%s', game_install_dir_path)
+
     if game_install_dir_path is None:
         raise Exception(_("ERR_NOT_FIND_TARGET_GAME_ON_YOUR_PC"))
 
@@ -106,8 +141,12 @@ def get_game_install_dir_path(target_app_id):
 
 
 def get_game_install_dir(dir_path, target_app_id):
+    logging.info('get game install dir')
+
     # インストールディレクトリにあるsteamapps/appmanifest_[APPID].acfを探す
     target_app_acf_path = __(dir_path, "appmanifest_{}.acf".format(target_app_id))
+
+    logging.info('target_app_acf_path=%s', target_app_acf_path)
 
     # なければ終了
     if os.path.exists(target_app_acf_path) is False:
@@ -116,12 +155,15 @@ def get_game_install_dir(dir_path, target_app_id):
     # acfファイルにある"installdir" "xxxx"をさがす
     install_dir_pattern = re.compile(r'\s*"installdir"\s+"(.*)')
     game_install_dir_name = None
-    with open(target_app_acf_path, mode='r', encoding="utf8") as target_app_acf_file:
+    with open(target_app_acf_path, mode='r', encoding="utf8", errors='ignore') as target_app_acf_file:
+        logging.info('open %s', target_app_acf_path)
         for line in target_app_acf_file:
             result = install_dir_pattern.match(line)
             if result is not None:
                 game_install_dir_name = result.group(1).strip("\"")
                 break
+
+        logging.info('game_install_dir_name=%s', game_install_dir_name)
 
         if game_install_dir_name is None:
             raise Exception(_("ERR_INVALID_ACF"))
@@ -132,37 +174,57 @@ def get_game_install_dir(dir_path, target_app_id):
     if os.path.exists(game_install_dir_path) is False:
         raise Exception(_("ERR_NOT_EXIST_GAME_INSTALL_DIR"))
 
+    logging.info('game_install_dir_path=%s', game_install_dir_path)
+
     return game_install_dir_path
 
 
 def get_lib_folders_from_vdf(steam_apps_path):
+    logging.info('get lib folders from vdf')
+
     # vdfファイルを探す
     library_folders_vdf_path = __(steam_apps_path, "libraryfolders.vdf")
     if os.path.exists(library_folders_vdf_path) is False:
         raise Exception(_("ERR_NOT_FIND_LIBRARYFOLDERS_VDF"))
 
+    logging.info('library_folders_vdf_path=%s', library_folders_vdf_path)
+
     # vdfファイルにある"[数字]" "xxxx"をさがす
     install_dir_pattern = re.compile(r'\s*"[0-9]+"\s+"(.*)')
+    logging.info('install_dir_pattern=%s', install_dir_pattern)
+
     game_libs_paths = []
-    with open(library_folders_vdf_path, mode='r', encoding="utf8") as target_vdf_file:
+    with open(library_folders_vdf_path, mode='r', encoding="utf8", errors='ignore') as target_vdf_file:
+        logging.info('open %s', library_folders_vdf_path)
         for line in target_vdf_file:
             result = install_dir_pattern.match(line)
             if result is not None:
                 game_libs_paths.append(__(result.group(1).strip("\"").replace("\\\\", "\\"), "steamapps"))
 
+    logging.info('game_libs_paths=%s', game_libs_paths)
+
     return game_libs_paths
 
 
 def install_key_file(save_file_path, mod_title, key_file_path):
-    with open(save_file_path, encoding="utf-8", mode='w') as fw:
+    logging.info('install key file')
+
+    with open(save_file_path, encoding="utf-8", mode='w', errors='ignore') as fw:
+        logging.info('open %s', save_file_path)
         fw.write("\n".join([
             mod_title,
             key_file_path
         ]))
 
+    logging.info('finish')
+
 
 def dll_installer(app_id, final_check_file, target_zip_url=None, target_repository=None):
+    logging.info('Start dll installer')
     install_dir_path = get_game_install_dir_path(app_id)
+
+    logging.info('install_dir_path=%s', install_dir_path)
+
     if target_zip_url is not None:
         src_url = target_zip_url
     else:
@@ -170,13 +232,22 @@ def dll_installer(app_id, final_check_file, target_zip_url=None, target_reposito
             repository_author=target_repository.get("author"),
             repository_name=target_repository.get("name")
         )
+
+    logging.info('src_url=%s', src_url)
+
     install(install_dir_path, src_url, final_check_file)
+
+    logging.info('finish')
 
 
 def uninstaller(uninstall_info_list):
+    logging.info('uninstall')
+
     for info in uninstall_info_list:
         final_check_file = info['final_check_file']
         remove_target_paths = info['remove_target_paths']
+
+        logging.info('remove_target_paths=%s', remove_target_paths)
 
         base_path = '.'
 
@@ -188,7 +259,10 @@ def uninstaller(uninstall_info_list):
                            info['game_dir_name'])
             # Modダウンローダーをuninstallモードで起動
             if os.path.exists(__(base_path, "claes.exe")):
+                logging.info('claes uninstall mode')
                 sb.call(__(base_path, "claes.exe /uninstall-all"))
+
+        logging.info('base_path=%s', base_path)
 
         # 最終チェックファイルがあるかを確認する。このファイルがあるかどうかで本当にインストールされているか判断する
         if os.path.exists(__(base_path, final_check_file)) is False:
@@ -197,46 +271,74 @@ def uninstaller(uninstall_info_list):
         for path in remove_target_paths:
             remove_util(__(base_path, path))
 
+    logging.info('finish')
+
 
 def get_my_documents_folder():
+    logging.info('get my documents folder')
+
     # APIを使って探す
     buf = ctypes.create_unicode_buffer(MAX_PATH + 1)
     if ctypes.windll.shell32.SHGetSpecialFolderPathW(None, buf, 0x0005, False):
+        logging.info('search done. buf.value=%s', buf.value)
         return buf.value
     else:
         raise Exception(_("ERR_SHGetSpecialFolderPathW"))
 
 
 def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_list_url):
+    logging.info('mod install')
+
     # My Documents をAPIから見つける
     install_game_dir_path = __(get_my_documents_folder(),
                                "Paradox Interactive",
                                game_dir_name)
 
+    logging.info('install_game_dir_path=%s', install_game_dir_path)
+
     # exeを見つける
     install_dll_dir_path = get_game_install_dir_path(app_id)
+
+    logging.info('install_dll_dir_path=%s', install_dll_dir_path)
+
+    logging.info('install downloader')
 
     # Modダウンローダーを配置
     install_downloader(target_repository=target_repository,
                        install_dir_path=install_game_dir_path)
 
+    logging.info('done')
+
     # keyファイルを保存
     os.makedirs(__(install_game_dir_path, 'claes.key'), exist_ok=True)
     key_ids = json.loads(urllib.request.urlopen(key_list_url).read().decode('utf8'))
+
+    logging.info('key_ids=%s', key_ids)
+
     for item in key_ids:
         install_key_file(save_file_path=__(install_game_dir_path, "claes.key", item.get("id") + ".key"),
                          mod_title=item.get("name"),
                          key_file_path=__(install_dll_dir_path, key_file_name))
 
+    logging.info('call claes')
+
     # Modダウンローダーを起動
     sb.call(__(install_game_dir_path, "claes.exe"))
 
+    logging.info('done')
+
 
 def about():
+    logging.info('open About dialog')
     messagebox.showinfo(_('ABOUT_BOX_TITLE'), _('ABOUT_BOX_MESSAGE'))
 
 
 if __name__ == '__main__':
+    logging.basicConfig(filename='info.log', level=logging.INFO)
+    logging.info('GUI setup')
+
+    repo_url = "https://raw.githubusercontent.com/matanki-saito/SimpleInstaller/master/"
+
     executor = concurrent.futures.ThreadPoolExecutor(max_workers=2)
 
     root = tkinter.Tk()
@@ -250,20 +352,12 @@ if __name__ == '__main__':
     nb = ttk.Notebook(width=300, height=200, style="BW.TLabel")
 
     # タブの作成
-    tab1 = tkinter.Frame(nb, pady=0, relief='flat')
     tab2 = tkinter.Frame(nb, pady=0, relief='flat')
     tab3 = tkinter.Frame(nb, pady=0, relief='flat')
 
-    nb.add(tab1, text=_('TAB_MBDLL'), padding=0)
     nb.add(tab2, text=_('TAB_JPMOD'), padding=0)
     nb.add(tab3, text=_('TAB_INFO'), padding=0)
     nb.pack(expand=True, fill='both')
-
-    # Install DLL
-    frame1_1 = tkinter.Frame(tab1, pady=0, relief='flat')
-    frame1_1.pack(expand=True, fill='both')
-
-    dl_url = "https://github.com/matanki-saito/SimpleInstaller/files/"
 
 
     def on_enter(e, bg_color, font_color):
@@ -295,92 +389,105 @@ if __name__ == '__main__':
         feature.add_done_callback(done)
 
 
-    # EU4
-    eu4DllInstallButton = tkinter.Button(frame1_1,
-                                         activebackground='#d3a243',
-                                         background='#d3a243',
-                                         fg="#8f2e14",
-                                         relief='flat',
-                                         text=_('INSTALL_EU4_MBDLL'),
-                                         command=lambda: threader(eu4DllInstallButton, lambda: dll_installer(
-                                             app_id=236850,
-                                             final_check_file='eu4.exe',
-                                             target_repository={
-                                                 "author": "matanki-saito",
-                                                 "name": "eu4dll"
-                                             },
-                                         )),
-                                         font=("sans-selif", 16, "bold"))
-    eu4DllInstallButton.pack(expand=True, fill='both')
-    eu4DllInstallButton.bind("<Enter>", lambda e: on_enter(e, "#e6b422", "#9a493f"))
-    eu4DllInstallButton.bind("<Leave>", lambda e: on_leave(e, "#d3a243", "#8f2e14"))
-
-    # CK2
-    ck2DllInstallButton = tkinter.Button(frame1_1,
-                                         activebackground='#2c4f54',
-                                         background='#2c4f54',
-                                         fg='#c1e4e9',
-                                         relief='flat',
-                                         text=_('INSTALL_CK2_MBDLL'),
-                                         command=lambda: threader(ck2DllInstallButton, lambda: dll_installer(
-                                             app_id=203770,
-                                             final_check_file='ck2game.exe',
-                                             target_repository={
-                                                 "author": "matanki-saito",
-                                                 "name": "ck2dll"
-                                             },
-                                         )),
-                                         font=("sans-selif", 16, "bold"))
-    ck2DllInstallButton.pack(expand=True, fill='both')
-    ck2DllInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
-    ck2DllInstallButton.bind("<Leave>", lambda e: on_leave(e, "#2c4f54", "#c1e4e9"))
-
-    # Install downloader and jpmod
+    # Install dll , downloader and jpmod
     frame1_2 = tkinter.Frame(tab2, pady=0)
     frame1_2.pack(expand=True, fill='both')
-    repo_url = "https://raw.githubusercontent.com/matanki-saito/SimpleInstaller/master/"
+
+
+    def eu4_button_function():
+        logging.info('Push a button to install eu4')
+        dll_installer(
+            app_id=236850,
+            final_check_file='eu4.exe',
+            target_repository={
+                "author": "matanki-saito",
+                "name": "eu4dll"
+            },
+        )
+
+        mod_installer(
+            app_id=236850,
+            target_repository={
+                "author": "matanki-saito",
+                "name": "moddownloader"
+            },
+            key_file_name='eu4.exe',
+            game_dir_name="Europa Universalis IV",
+            key_list_url=repo_url + "eu4mods.json")
+
+
+    def ck2_button_function():
+        logging.info('Push a button to install ck2')
+        dll_installer(
+            app_id=203770,
+            final_check_file='ck2game.exe',
+            target_repository={
+                "author": "matanki-saito",
+                "name": "ck2dll"
+            },
+        )
+
+        mod_installer(
+            app_id=203770,
+            target_repository={
+                "author": "matanki-saito",
+                "name": "moddownloader"
+            },
+            key_file_name='ck2game.exe',
+            game_dir_name="Crusader Kings II",
+            key_list_url=repo_url + "ck2mods.json")
+
+
+    def ir_button_function():
+        logging.info('Push a button to install I:R')
+        dll_installer(
+            app_id=859580,
+            final_check_file='binaries/imperator.exe',
+            target_repository={
+                "author": "matanki-saito",
+                "name": "irdll"
+            },
+        )
+
 
     # EU4
-    eu4ModInstallButton = tkinter.Button(frame1_2,
-                                         activebackground='#d3a243',
-                                         background='#d3a243',
-                                         relief='flat',
-                                         fg="#8f2e14",
-                                         text=_('INSTALL_EU4_JPMOD'),
-                                         command=lambda: threader(eu4ModInstallButton, lambda: mod_installer(
-                                             app_id=236850,
-                                             target_repository={
-                                                 "author": "matanki-saito",
-                                                 "name": "moddownloader"
-                                             },
-                                             key_file_name='eu4.exe',
-                                             game_dir_name="Europa Universalis IV",
-                                             key_list_url=repo_url + "eu4mods.json")),
-                                         font=("sans-selif", 16, "bold"))
-    eu4ModInstallButton.pack(expand=True, fill='both')
-    eu4ModInstallButton.bind("<Enter>", lambda e: on_enter(e, "#e6b422", "#9a493f"))
-    eu4ModInstallButton.bind("<Leave>", lambda e: on_leave(e, "#d3a243", "#8f2e14"))
+    eu4InstallButton = tkinter.Button(frame1_2,
+                                      activebackground='#d3a243',
+                                      background='#d3a243',
+                                      relief='flat',
+                                      fg="#8f2e14",
+                                      text=_('INSTALL_EU4'),
+                                      command=lambda: threader(eu4InstallButton, eu4_button_function),
+                                      font=("sans-selif", 16, "bold"))
+    eu4InstallButton.pack(expand=True, fill='both')
+    eu4InstallButton.bind("<Enter>", lambda e: on_enter(e, "#e6b422", "#000000"))
+    eu4InstallButton.bind("<Leave>", lambda e: on_leave(e, "#d3a243", "#8f2e14"))
 
     # CK2
-    ck2ModInstallButton = tkinter.Button(frame1_2,
-                                         activebackground='#2c4f54',
-                                         background='#2c4f54',
-                                         relief='flat',
-                                         fg='#c1e4e9',
-                                         text=_('INSTALL_CK2_JPMOD'),
-                                         command=lambda: threader(ck2ModInstallButton, lambda: mod_installer(
-                                             app_id=203770,
-                                             target_repository={
-                                                 "author": "matanki-saito",
-                                                 "name": "moddownloader"
-                                             },
-                                             key_file_name='ck2game.exe',
-                                             game_dir_name="Crusader Kings II",
-                                             key_list_url=repo_url + "ck2mods.json")),
-                                         font=("sans-selif", 16, "bold"))
-    ck2ModInstallButton.pack(expand=True, fill='both')
-    ck2ModInstallButton.bind("<Enter>", lambda e: on_enter(e, "#478384", "#1f3134"))
-    ck2ModInstallButton.bind("<Leave>", lambda e: on_leave(e, "#2c4f54", "#c1e4e9"))
+    ck2InstallButton = tkinter.Button(frame1_2,
+                                      activebackground='#478384',
+                                      background='#478384',
+                                      relief='flat',
+                                      fg='#1f3134',
+                                      text=_('INSTALL_CK2'),
+                                      command=lambda: threader(ck2InstallButton, ck2_button_function),
+                                      font=("sans-selif", 16, "bold"))
+    ck2InstallButton.pack(expand=True, fill='both')
+    ck2InstallButton.bind("<Enter>", lambda e: on_enter(e, "#2c4f54", "#c1e4e9"))
+    ck2InstallButton.bind("<Leave>", lambda e: on_leave(e, "#478384", "#1f3134"))
+
+    # I:R
+    irInstallButton = tkinter.Button(frame1_2,
+                                     activebackground='#cca6bf',
+                                     background='#cca6bf',
+                                     relief='flat',
+                                     fg='#8f2e14',
+                                     text=_('INSTALL_IR'),
+                                     command=lambda: threader(irInstallButton, ir_button_function),
+                                     font=("sans-selif", 16, "bold"))
+    irInstallButton.pack(expand=True, fill='both')
+    irInstallButton.bind("<Enter>", lambda e: on_enter(e, "#bc64a4", "#c1e4e9"))
+    irInstallButton.bind("<Leave>", lambda e: on_leave(e, "#cca6bf", "#8f2e14"))
 
     # その他
     frame1_3 = tkinter.Frame(tab3, pady=0)
@@ -465,6 +572,8 @@ if __name__ == '__main__':
                                           height='1',
                                           font=("Helvetica", 12))
     uninstall_button_ck2.pack(expand=True, fill='both')
+
+    logging.info('mainloop')
 
     # main
     root.mainloop()

@@ -55,21 +55,23 @@ loca_dic = {
         'default': 'Uninstall a CK2 multibyte dll',
         'ja_JP': 'アンインストール\n・CK2日本語DLL\n・関連MOD',
     },
-    'INSTALL_CK2_MBDLL': {
-        'default': 'Install CK2 Multibyte DLL',
-        'ja_JP': 'CK2日本語化DLL\nインストール',
-        'zh_CN': '安装\nCK2 Multibyte DLL',
-        'zh_TW': '安裝\nCK2 Multibyte DLL',
-        'ko_KR': 'CK2 멀티 바이트 DLL 설치',
-        'de_DE': 'Installieren Sie die CK2-Multibyte-DLL'
+    'INSTALL_CK2': {
+        'default': 'CK2\nmulti-byte patch',
+        'ja_JP': 'クルセイダーキングズ２\n日本語化',
+        'zh_CN': '王国风云2\n本双字节补丁',
+        'zh_TW': '王國風雲2\n本雙字節補丁',
+        'ko_KR': '크루세이더 킹즈2\n멀티 바이트 패치'
     },
-    'INSTALL_EU4_MBDLL': {
-        'default': 'Install\n EU4 Multibyte DLL',
-        'ja_JP': 'EU4日本語化DLL\nインストール',
-        'zh_CN': '安装\nEU4 DLL',
-        'zh_TW': '安裝\nEU4 DLL',
-        'ko_KR': 'EU4 멀티 바이트\nDLL 설치',
-        'de_DE': 'Installieren Sie die EU4-Multibyte-DLL'
+    'INSTALL_EU4': {
+        'default': 'Europa Universalis IV\nmulti-byte patch',
+        'ja_JP': 'ヨーロッパユニバーサリス４\n日本語化',
+        'zh_CN': '欧陆风云4\n本双字节补丁',
+        'zh_TW': '歐陸風雲4\n本雙字節補丁',
+        'ko_KR': '유로파 유니버설리스4\n멀티 바이트 패치'
+    },
+    'INSTALL_IR': {
+        'default': 'Imperator: Rome\ndisplay fix patch',
+        'ja_JP': 'インペラトル： ローマ\n表示修正',
     },
     'TITLE': {
         'default': 'CK2/EU4 Multibyte DLL Installer',
@@ -163,8 +165,8 @@ loca_dic = {
         'default': 'DLL'
     },
     'TAB_JPMOD': {
-        'default': 'JPMOD',
-        'ja_JP': '日本語化MOD'
+        'default': 'Install',
+        'ja_JP': 'インストール'
     },
     'TAB_INFO': {
         'default': 'About',
