@@ -449,6 +449,16 @@ if __name__ == '__main__':
             },
         )
 
+        mod_installer(
+            app_id=859580,
+            target_repository={
+                "author": "matanki-saito",
+                "name": "moddownloader"
+            },
+            key_file_name='binaries/imperator.exe',
+            game_dir_name="Imperator",
+            key_list_url=repo_url + "irmods.json")
+
 
     # EU4
     eu4InstallButton = tkinter.Button(frame1_2,
