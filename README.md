@@ -3,7 +3,7 @@
 ## Overview
 ![run](resource/image.png)
 
-Install [eu4dll](https://github.com/matanki-saito/EU4dll) or [ck2dll](https://github.com/matanki-saito/CK2dll) on your PC.
+Install [eu4dll](https://github.com/matanki-saito/EU4dll) or [ck2dll](https://github.com/matanki-saito/CK2dll) or [irdll](https://github.com/matanki-saito/irdll) on your PC.
  - Installer sees Steam's settings.
  - Installer will find the directory where eu4/ck2 is installed.
  - Put the dll there.
