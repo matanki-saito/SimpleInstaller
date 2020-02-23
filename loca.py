@@ -176,6 +176,13 @@ loca_dic = {
         'ko_KR': '이 소프트웨어에 대한',
         'de_DE': 'Über'
     },
+    'TAB_LOG': {
+        'default': 'log',
+        'ja_JP': 'ログ',
+        'zh_CN': 'log',
+        'zh_TW': 'log',
+        'ko_KR': 'log'
+    },
     'INSTALL_EU4_JPMOD': {
         'default': 'Install\nEU4 JPMODs',
         'ja_JP': 'EU4日本語化Mod\nインストール'
