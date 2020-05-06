@@ -1,0 +1,73 @@
+name: Build and release
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build:
+
+    runs-on: windows-2019
+    if: "! contains(github.event.head_commit.message, '[ci skip]')"
+    strategy:
+      matrix:
+        python-version: [3.8]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Update pip
+        run: |
+          python -m pip install --upgrade pip
+
+      - name: Install pyinstaller
+        run: |
+          pip install pyinstaller
+        shell: powershell
+
+      - name: build installer
+        run: pyinstaller ./angelica.py -n installer --onefile --noconsole --icon=./icon.ico
+
+      - name: Make artifact package
+        run: |
+          New-Item artifact -ItemType Directory
+          New-Item artifact/plugins -ItemType Directory
+        shell: powershell
+
+      - name: Move files to artifact package
+        run: |
+          Move-Item README.md artifact/
+          Move-Item installer.exe artifact/
+        shell: powershell
+
+      - name: generate artifact zip
+        run: |
+          compress-archive -Path artifact/* -DestinationPath installer_{{ github.run_number }}.zip
+        shell: powershell
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+        with:
+          tag_name: ${{ github.run_number }}
+          release_name: Release ${{ github.run_number }}
+          body: |
+            new font released!
+          draft: false
+          prerelease: false
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./installer_{{ github.run_number }}.zip
+          asset_name: installer_{{ github.run_number }}.zip
+          asset_content_type: application/zip
