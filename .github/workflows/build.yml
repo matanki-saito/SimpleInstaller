@@ -3,7 +3,7 @@ name: Build and release
 on:
   push:
     branches:
-      - develop
+      - master
 
 jobs:
   build:
@@ -58,7 +58,7 @@ jobs:
           tag_name: ${{ github.run_number }}
           release_name: Release ${{ github.run_number }}
           body: |
-            new font released!
+            new installer released!
           draft: false
           prerelease: false
       - name: Upload Release Asset
