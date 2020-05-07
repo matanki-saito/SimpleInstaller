@@ -1,0 +1,84 @@
+@startuml
+
+Actor User
+control "main thread" as main
+control "event thread" as event
+participant button_function as button
+control mod_downloader as downloader
+control windows
+database triela
+database github
+
+User -> main : run
+activate main
+hnote over main : setup UI
+
+User -> main :click button
+activate main
+
+main ->  event : add_done_callback
+activate event
+
+hnote over main : button label: `begin`
+
+event -> button
+activate button
+
+
+
+deactivate main
+
+ == Install dlls ==
+
+hnote over button,windows : Open registry key\n<HKEY_LOCAL_MACHINE\\SOFTWARE\\Valve\\Steam>
+alt failed case
+hnote over button,windows : Open registry key\n<HKEY_LOCAL_MACHINE\\WOW6432Node\\Valve\\Steam>
+end
+
+hnote over button,windows : Open value\n <InstallPath>
+
+hnote over button : Get steam install path
+
+hnote over button : Concrete steam app path (add stream install path to `steamapps`
+
+hnote over button : Get acf dir paths from libraryfolders.vdf
+
+hnote over button : Acf file analyze
+
+hnote over button : Get game install dir path from acf files
+
+hnote over button,github : Download latest release dlls from github
+
+hnote over button: unpack zip to game install dir
+
+ == Install mods ==
+
+hnote over button,windows : Get mydocument path\n<SHGetSpecialFolderPathW>
+
+hnote over button #FFAAAA : get_game_install_dir_path
+
+hnote over button,github : Download latest release downloader from github
+
+hnote over button: unpack zip to mydocument
+
+hnote over button,github : Download mod key files from github
+
+button -> downloader : call downloader
+activate downloader
+hnote over downloader,triela : Download mods
+button <- downloader
+deactivate downloader
+
+
+event <- button
+deactivate button
+
+hnote over event : button label: `end`
+hnote over event : wait 1 second
+
+User -> main : kill
+deactivate event
+
+deactivate main
+
+@enduml

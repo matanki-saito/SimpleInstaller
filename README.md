@@ -39,7 +39,8 @@ Install game mods to your computer.
 > - User name must **not contain spaces**. OK) HakureiReimu , NG) Hakurei Reimu
 
 ## Sequence
-TBD
+![sequence](resource/sequence.png)
+
 
 ## Build
 ### Requirement
