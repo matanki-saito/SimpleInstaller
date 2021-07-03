@@ -209,7 +209,7 @@ def get_lib_folders_from_vdf(steam_apps_path):
     logger.info('library_folders_vdf_path=%s', library_folders_vdf_path)
 
     # vdfファイルにある"[数字]" "xxxx"をさがす
-    install_dir_pattern = re.compile(r'\s*"[0-9]+"\s+"(.*)')
+    install_dir_pattern = re.compile(r'\s*"[0-9a-zA-Z]+"\s+"(.*)')
     logger.info('install_dir_pattern=%s', install_dir_pattern)
 
     game_libs_paths = []
