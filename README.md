@@ -24,6 +24,11 @@ Install game mods to your computer.
    - [irdll](https://github.com/matanki-saito/irdll) : Change mm/dd/yyyy to yyyy/mm/dd
    - [UI fix mod](https://github.com/matanki-saito/ImperatorRomeJPAppI)
    - [auto updater](https://github.com/matanki-saito/moddownloader)
+- For [VictoriaII](https://store.steampowered.com/bundle/9711/Victoria_II_Complete_Edition/)
+   - [vic2dll](https://github.com/matanki-saito/vic2dll) : Multi-byte patch
+   - [VICII Mod Core](https://github.com/matanki-saito/VIC2JPModCore)
+   - [VICII Mod Appendix I](https://github.com/matanki-saito/VIC2JPModAppendixI)
+
 
 ## How to use
  Just click the button !
