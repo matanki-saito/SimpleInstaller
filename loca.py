@@ -55,6 +55,10 @@ loca_dic = {
         'default': 'Uninstall a CK2 multibyte dll',
         'ja_JP': 'アンインストール\n・CK2日本語DLL\n・関連MOD',
     },
+    'UNINSTALL_VIC2': {
+        'default': 'Uninstall a VIC2 multibyte dll',
+        'ja_JP': 'アンインストール\n・VIC2日本語DLL\n・関連MOD',
+    },
     'INSTALL_CK2': {
         'default': 'CK2\nmulti-byte patch',
         'ja_JP': 'クルセイダーキングズ２\n日本語化',
@@ -72,6 +76,10 @@ loca_dic = {
     'INSTALL_IR': {
         'default': 'Imperator: Rome\ndisplay fix patch',
         'ja_JP': 'インペラトル： ローマ\n表示修正',
+    },
+    'INSTALL_VIC2': {
+        'default': 'Victoria II\nmulti-byte patch',
+        'ja_JP': 'ヴィクトリア２\n日本語化',
     },
     'TITLE': {
         'default': 'CK2/EU4 Multibyte DLL Installer',
@@ -191,6 +199,10 @@ loca_dic = {
     'INSTALL_CK2_JPMOD': {
         'default': 'Install\nCK2 JPMODs',
         'ja_JP': 'CK2日本語化Mod\nインストール'
+    },
+    'INSTALL_VIC2_JPMOD': {
+        'default': 'Install\nVIC2 JPMODs',
+        'ja_JP': 'VIC2日本語化Mod\nインストール'
     },
     'TASK_DO': {
         'default': 'running...',

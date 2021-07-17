@@ -272,6 +272,10 @@ def uninstaller(uninstall_info_list):
 
         if 'app_id' in info:
             base_path = get_game_install_dir_path(info['app_id'])
+            if os.path.exists(__(base_path, "claes.exe")):
+                logger.info('claes uninstall mode')
+                sb.call(__(base_path, "claes.exe /uninstall-all"))
+
         elif 'game_dir_name' in info:
             base_path = __(get_my_documents_folder(),
                            "Paradox Interactive",
@@ -305,20 +309,23 @@ def get_my_documents_folder():
         raise Exception(_("ERR_SHGetSpecialFolderPathW"))
 
 
-def mod_installer(app_id, target_repository, key_file_name, game_dir_name, key_list_url):
+def mod_installer(app_id, target_repository, key_file_name, key_list_url, game_dir_name=None):
     logger.info('mod install')
-
-    # My Documents をAPIから見つける
-    install_game_dir_path = __(get_my_documents_folder(),
-                               "Paradox Interactive",
-                               game_dir_name)
-
-    logger.info('install_game_dir_path=%s', install_game_dir_path)
 
     # exeを見つける
     install_dll_dir_path = get_game_install_dir_path(app_id)
 
     logger.info('install_dll_dir_path=%s', install_dll_dir_path)
+
+    # My Documents をAPIから見つける
+    if game_dir_name is None:
+        install_game_dir_path = install_dll_dir_path
+    else:
+        install_game_dir_path = __(get_my_documents_folder(),
+                                   "Paradox Interactive",
+                                   game_dir_name)
+
+    logger.info('install_game_dir_path=%s', install_game_dir_path)
 
     logger.info('install downloader')
 
@@ -488,6 +495,27 @@ if __name__ == '__main__':
             key_list_url=repo_url + "irmods.json")
 
 
+    def vic2_button_function():
+        logger.info('Push a button to install vic2')
+        dll_installer(
+            app_id=42960,
+            final_check_file='v2game.exe',
+            target_repository={
+                "author": "matanki-saito",
+                "name": "vic2dll"
+            },
+        )
+
+        mod_installer(
+            app_id=42960,
+            target_repository={
+                "author": "matanki-saito",
+                "name": "moddownloader"
+            },
+            key_file_name='v2game.exe',
+            key_list_url=repo_url + "vic2mods.json")
+
+
     # EU4
     eu4InstallButton = tkinter.Button(frame1_2,
                                       activebackground='#d3a243',
@@ -526,6 +554,19 @@ if __name__ == '__main__':
     irInstallButton.pack(expand=True, fill='both')
     irInstallButton.bind("<Enter>", lambda e: on_enter(e, "#bc64a4", "#c1e4e9"))
     irInstallButton.bind("<Leave>", lambda e: on_leave(e, "#cca6bf", "#8f2e14"))
+
+    # VIC2
+    vic2InstallButton = tkinter.Button(frame1_2,
+                                       activebackground='#a9a9a9',
+                                       background='#a9a9a9',
+                                       relief='flat',
+                                       fg='#000000',
+                                       text=_('INSTALL_VIC2'),
+                                       command=lambda: threader(vic2InstallButton, vic2_button_function),
+                                       font=("sans-selif", 16, "bold"))
+    vic2InstallButton.pack(expand=True, fill='both')
+    vic2InstallButton.bind("<Enter>", lambda e: on_enter(e, "#dcdcdc", "#000000"))
+    vic2InstallButton.bind("<Leave>", lambda e: on_leave(e, "#a9a9a9", "#000000"))
 
     # その他
     frame1_3 = tkinter.Frame(tab3, pady=0)
@@ -610,6 +651,32 @@ if __name__ == '__main__':
                                           height='1',
                                           font=("Helvetica", 12))
     uninstall_button_ck2.pack(expand=True, fill='both')
+
+    uninstall_button_vic2 = tkinter.Button(frame1_3,
+                                           background='#FFFFFF',
+                                           fg='black',
+                                           text=_('UNINSTALL_VIC2'),
+                                           command=lambda: threader(uninstall_button_vic2, lambda: uninstaller(
+                                               [
+                                                   {
+                                                       # VIC2 DLL and mod
+                                                       'app_id': 42960,
+                                                       'final_check_file': 'v2game.exe',
+                                                       'remove_target_paths': [
+                                                           'd3d9.dll',
+                                                           'plugins',
+                                                           'pattern_ck2jps.log',
+                                                           'README.md',
+                                                           '.dist.v1.json',
+                                                           'claes.exe',
+                                                           'claes.key',
+                                                           'claes.cache'
+                                                       ]
+                                                   }
+                                               ])),
+                                           height='1',
+                                           font=("Helvetica", 12))
+    uninstall_button_vic2.pack(expand=True, fill='both')
 
     logger.info('mainloop')
 
