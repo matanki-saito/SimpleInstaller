@@ -302,7 +302,7 @@ def get_my_documents_folder():
 
     # APIを使って探す
     buf = ctypes.create_unicode_buffer(MAX_PATH + 1)
-    if ctypes.windll.shell32.SHGetSpecialFolderPathW(None, buf, 0x0005, False):
+    if ctypes.windll.shell32.SHGetSpecialFolderPathW(None, buf, 0x1005, False):
         logger.info('search done. buf.value=%s', buf.value)
         return buf.value
     else:
@@ -349,7 +349,10 @@ def mod_installer(app_id, target_repository, key_file_name, key_list_url, game_d
     logger.info('call claes')
 
     # Modダウンローダーを起動
-    sb.call(__(install_game_dir_path, "claes.exe"))
+    mod_downloader_path = __(install_game_dir_path, "claes.exe")
+    logger.info('mod_downloader_path=%s', mod_downloader_path)
+
+    sb.call(mod_downloader_path, shell=True)
 
     logger.info('done')
 
