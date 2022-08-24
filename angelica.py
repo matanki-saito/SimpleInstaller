@@ -106,12 +106,12 @@ def install_downloader(target_repository, install_dir_path):
 def get_game_install_dir_path(target_app_id):
     logger.info('Get install dir path')
     # レジストリを見て、Steamのインストール先を探す
-    # 32bitを見て、なければ64bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
+    #64bitを見て、なければ32bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
     try:
-        steam_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Valve\\Steam")
+        steam_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Valve\\Steam")
     except OSError:
         try:
-            steam_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Valve\\Steam")
+            steam_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Valve\\Steam")
         except OSError:
             raise Exception(_("ERR_NOT_FIND_STEAM_REGKEY"))
 
