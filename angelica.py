@@ -103,7 +103,55 @@ def install_downloader(target_repository, install_dir_path):
     logger.info('zip unpacked')
 
 
-def get_game_install_dir_path(target_app_id):
+def get_game_install_dir_path_epic(target_game_dir_name):
+    logger.info('Get install dir path')
+
+    # AppDirを見て設定ファイルを探す
+    appdata_path = os.getenv('LOCALAPPDATA')
+    logger.info("LOCALAPPDATA=%s", appdata_path)
+
+    if appdata_path is None:
+        logger.info('Failed: Get LOCALAPPDATA path from env')
+        return None
+    else:
+        logger.info('Success: Get LOCALAPPDATA path from env')
+
+    # 設定ファイルに標準ゲームインストール先が存在するのでそれを取得する。
+    epic_game_launcher_setting_path = __(appdata_path, "EpicGamesLauncher", "Saved", "Config", "Windows", "GameUserSettings.ini")
+    logger.info("epic game launcher setting path = %s", epic_game_launcher_setting_path)
+    if not os.path.isfile(epic_game_launcher_setting_path):
+        logger.info('Failed: Get GameUserSettings.ini')
+        return None
+    else:
+        logger.info('Success: Get GameUserSettings.ini')
+
+    game_default_install_dir_path = None
+    epic_game_default_install_pattern = re.compile(r'\s*DefaultAppInstallLocation\s*=\s*(.+)')
+    with open(epic_game_launcher_setting_path, mode='r', encoding="utf8", errors='ignore') as ini:
+        logger.info('open %s', epic_game_launcher_setting_path)
+        for line in ini:
+            result = epic_game_default_install_pattern.match(line)
+            if result is not None:
+                game_default_install_dir_path = result.group(1).strip("\"")
+                break
+
+        logger.info('game_install_dir_name=%s', game_default_install_dir_path)
+
+        if game_default_install_dir_path is None or not os.path.isdir(game_default_install_dir_path):
+            raise Exception("GameUserSettings.ini error")
+
+    # 標準ディレクトリから対象のゲームを探す
+    game_install_dir_path = __(game_default_install_dir_path, target_game_dir_name)
+    if not os.path.isdir(game_install_dir_path):
+        logger.info('Failed: Find target_game_dir_path')
+        return None
+    else:
+        logger.info('Success: Find target_game_dir_path')
+
+    return game_install_dir_path
+
+
+def get_game_install_dir_path_steam(target_app_id):
     logger.info('Get install dir path')
     # レジストリを見て、Steamのインストール先を探す
     #64bitを見て、なければ32bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
@@ -113,16 +161,19 @@ def get_game_install_dir_path(target_app_id):
         try:
             steam_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Valve\\Steam")
         except OSError:
-            raise Exception(_("ERR_NOT_FIND_STEAM_REGKEY"))
+            logger.info(_("ERR_NOT_FIND_STEAM_REGKEY"))
+            return None
 
     logger.info('Find steam_install_key in reg')
 
     try:
         steam_install_path, key_type = winreg.QueryValueEx(steam_install_key, "InstallPath")
     except FileNotFoundError:
-        raise Exception(_("ERR_NOT_FIND_INSTALLPATH_IN_STEAM_REGKEY"))
+        logger.info(_("ERR_NOT_FIND_INSTALLPATH_IN_STEAM_REGKEY"))
+        return None
+    finally:
+        steam_install_key.Close()
 
-    steam_install_key.Close()
     logger.info('steam_install_path=%s, key_type=%s', steam_install_path, key_type)
 
     # 基本問題ないと思うが念の為
@@ -154,7 +205,8 @@ def get_game_install_dir_path(target_app_id):
     logger.info('game_install_dir_path=%s', game_install_dir_path)
 
     if game_install_dir_path is None:
-        raise Exception(_("ERR_NOT_FIND_TARGET_GAME_ON_YOUR_PC"))
+        logger.info(_("ERR_NOT_FIND_TARGET_GAME_ON_YOUR_PC"))
+        return None
 
     return game_install_dir_path
 
@@ -238,11 +290,15 @@ def install_key_file(save_file_path, mod_title, key_file_path):
     logger.info('finish')
 
 
-def dll_installer(app_id, final_check_file, target_zip_url=None, target_repository=None):
-    logger.info('Start dll installer')
-    install_dir_path = get_game_install_dir_path(app_id)
+def dll_installer_steam(app_id, final_check_file, target_zip_url=None, target_repository=None):
+    logger.info('Start dll installer for steam')
 
-    logger.info('install_dir_path=%s', install_dir_path)
+    install_dir_path_steam = get_game_install_dir_path_steam(app_id)
+    if install_dir_path_steam is not None:
+        logger.info('install_dir_path_steam=%s', install_dir_path_steam)
+
+    if install_dir_path_steam is None:
+        Exception("Not found target game in your PC!")
 
     if target_zip_url is not None:
         src_url = target_zip_url
@@ -251,13 +307,39 @@ def dll_installer(app_id, final_check_file, target_zip_url=None, target_reposito
             repository_author=target_repository.get("author"),
             repository_name=target_repository.get("name")
         )
-
     logger.info('src_url=%s', src_url)
 
-    install(install_dir_path, src_url, final_check_file)
+    if install_dir_path_steam is not None:
+        install(install_dir_path_steam, src_url, final_check_file)
+        logger.info('install_dir_path_steam=%s', install_dir_path_steam)
 
     logger.info('finish')
 
+
+def dll_installer_epic(epic_game_dir_name, final_check_file, target_zip_url=None, target_repository=None):
+    logger.info('Start dll installer for epic')
+
+    install_dir_path_epic = get_game_install_dir_path_epic(epic_game_dir_name)
+    if install_dir_path_epic is not None:
+        logger.info('install_dir_path_epic=%s', install_dir_path_epic)
+
+    if install_dir_path_epic is None:
+        Exception("Not found target game in your PC!")
+
+    if target_zip_url is not None:
+        src_url = target_zip_url
+    else:
+        src_url = download_asset_url_from_github(
+            repository_author=target_repository.get("author"),
+            repository_name=target_repository.get("name")
+        )
+    logger.info('src_url=%s', src_url)
+
+    if install_dir_path_epic is not None:
+        install(install_dir_path_epic, src_url, final_check_file)
+        logger.info('install_dir_path_epic=%s', install_dir_path_epic)
+
+    logger.info('finish')
 
 def uninstaller(uninstall_info_list):
     logger.info('uninstall')
@@ -271,8 +353,14 @@ def uninstaller(uninstall_info_list):
         base_path = '.'
 
         if 'app_id' in info:
-            base_path = get_game_install_dir_path(info['app_id'])
+            base_path = get_game_install_dir_path_steam(info['app_id'])
             if os.path.exists(__(base_path, "claes.exe")):
+                logger.info('claes uninstall mode')
+                sb.call(__(base_path, "claes.exe /uninstall-all"))
+
+        elif 'epic_game_dir_name' in info:
+            base_path = get_game_install_dir_path_epic(info['epic_dir_name'])
+            if base_path is not None and os.path.exists(__(base_path, "claes.exe")):
                 logger.info('claes uninstall mode')
                 sb.call(__(base_path, "claes.exe /uninstall-all"))
 
@@ -309,11 +397,59 @@ def get_my_documents_folder():
         raise Exception(_("ERR_SHGetSpecialFolderPathW"))
 
 
-def mod_installer(app_id, target_repository, key_file_name, key_list_url, game_dir_name=None):
+def mod_installer_epic(epic_game_dir_name, target_repository, key_file_name, key_list_url, game_dir_name=None):
     logger.info('mod install')
 
     # exeを見つける
-    install_dll_dir_path = get_game_install_dir_path(app_id)
+    install_dll_dir_path = get_game_install_dir_path_epic(epic_game_dir_name)
+
+    logger.info('install_dll_dir_path=%s', install_dll_dir_path)
+
+    # My Documents をAPIから見つける
+    if game_dir_name is None:
+        install_game_dir_path = install_dll_dir_path
+    else:
+        install_game_dir_path = __(get_my_documents_folder(),
+                                   "Paradox Interactive",
+                                   game_dir_name)
+
+    logger.info('install_game_dir_path=%s', install_game_dir_path)
+
+    logger.info('install downloader')
+
+    # Modダウンローダーを配置
+    install_downloader(target_repository=target_repository,
+                       install_dir_path=install_game_dir_path)
+
+    logger.info('done')
+
+    # keyファイルを保存
+    os.makedirs(__(install_game_dir_path, 'claes.key'), exist_ok=True)
+    key_ids = json.loads(urllib.request.urlopen(key_list_url).read().decode('utf8'))
+
+    logger.info('key_ids=%s', key_ids)
+
+    for item in key_ids:
+        install_key_file(save_file_path=__(install_game_dir_path, "claes.key", item.get("id") + ".key"),
+                         mod_title=item.get("name"),
+                         key_file_path=__(install_dll_dir_path, key_file_name))
+
+    logger.info('call claes')
+
+    # Modダウンローダーを起動
+    mod_downloader_path = __(install_game_dir_path, "claes.exe")
+    logger.info('mod_downloader_path=%s', mod_downloader_path)
+
+    sb.call(mod_downloader_path, shell=True)
+
+    logger.info('done')
+
+
+def mod_installer_steam(app_id, target_repository, key_file_name, key_list_url, game_dir_name=None):
+    logger.info('mod install')
+
+    # exeを見つける
+    install_dll_dir_path = get_game_install_dir_path_steam(app_id)
 
     logger.info('install_dll_dir_path=%s', install_dll_dir_path)
 
@@ -434,7 +570,7 @@ if __name__ == '__main__':
 
     def eu4_button_function():
         logger.info('Push a button to install eu4')
-        dll_installer(
+        dll_installer_steam(
             app_id=236850,
             final_check_file='eu4.exe',
             target_repository={
@@ -443,7 +579,16 @@ if __name__ == '__main__':
             },
         )
 
-        mod_installer(
+        dll_installer_epic(
+            epic_game_dir_name="EuropaUniversalis4",
+            final_check_file='eu4.exe',
+            target_repository={
+                "author": "matanki-saito",
+                "name": "eu4dll"
+            },
+        )
+
+        mod_installer_steam(
             app_id=236850,
             target_repository={
                 "author": "matanki-saito",
@@ -453,10 +598,20 @@ if __name__ == '__main__':
             game_dir_name="Europa Universalis IV",
             key_list_url=repo_url + "eu4mods.json")
 
+        mod_installer_epic(
+            epic_game_dir_name="EuropaUniversalis4",
+            target_repository={
+                "author": "matanki-saito",
+                "name": "moddownloader"
+            },
+            key_file_name='eu4.exe',
+            game_dir_name="Europa Universalis IV EGS",
+            key_list_url=repo_url + "eu4mods.json")
+
 
     def ck2_button_function():
         logger.info('Push a button to install ck2')
-        dll_installer(
+        dll_installer_steam(
             app_id=203770,
             final_check_file='ck2game.exe',
             target_repository={
@@ -465,7 +620,7 @@ if __name__ == '__main__':
             },
         )
 
-        mod_installer(
+        mod_installer_steam(
             app_id=203770,
             target_repository={
                 "author": "matanki-saito",
@@ -478,7 +633,7 @@ if __name__ == '__main__':
 
     def ir_button_function():
         logger.info('Push a button to install I:R')
-        dll_installer(
+        dll_installer_steam(
             app_id=859580,
             final_check_file='binaries/imperator.exe',
             target_repository={
@@ -487,7 +642,7 @@ if __name__ == '__main__':
             },
         )
 
-        mod_installer(
+        mod_installer_steam(
             app_id=859580,
             target_repository={
                 "author": "matanki-saito",
@@ -500,7 +655,7 @@ if __name__ == '__main__':
 
     def vic2_button_function():
         logger.info('Push a button to install vic2')
-        dll_installer(
+        dll_installer_steam(
             app_id=42960,
             final_check_file='v2game.exe',
             target_repository={
@@ -509,7 +664,7 @@ if __name__ == '__main__':
             },
         )
 
-        mod_installer(
+        mod_installer_steam(
             app_id=42960,
             target_repository={
                 "author": "matanki-saito",
@@ -592,6 +747,21 @@ if __name__ == '__main__':
                                               [
                                                   {
                                                       # EU4 DLL
+                                                      'epic_game_dir_name': "EuropaUniversalis4",
+                                                      'final_check_file': 'eu4.exe',
+                                                      'remove_target_paths': [
+                                                          'd3d9.dll',
+                                                          'version.dll',
+                                                          'plugins',
+                                                          'pattern_eu4jps.log',
+                                                          'README.md'
+                                                          'pattern_eu4_jps_2.log',
+                                                          'README.md',
+                                                          '.dist.v1.json'
+                                                      ]
+                                                  },
+                                                  {
+                                                      # EU4 DLL steam
                                                       'app_id': 236850,
                                                       'final_check_file': 'eu4.exe',
                                                       'remove_target_paths': [
