@@ -341,6 +341,7 @@ def dll_installer_epic(epic_game_dir_name, final_check_file, target_zip_url=None
 
     logger.info('finish')
 
+
 def uninstaller(uninstall_info_list):
     logger.info('uninstall')
 
@@ -359,7 +360,7 @@ def uninstaller(uninstall_info_list):
                 sb.call(__(base_path, "claes.exe /uninstall-all"))
 
         elif 'epic_game_dir_name' in info:
-            base_path = get_game_install_dir_path_epic(info['epic_dir_name'])
+            base_path = get_game_install_dir_path_epic(info['epic_game_dir_name'])
             if base_path is not None and os.path.exists(__(base_path, "claes.exe")):
                 logger.info('claes uninstall mode')
                 sb.call(__(base_path, "claes.exe /uninstall-all"))
@@ -373,12 +374,15 @@ def uninstaller(uninstall_info_list):
                 logger.info('claes uninstall mode')
                 sb.call(__(base_path, "claes.exe /uninstall-all"))
 
+        if base_path is None:
+            continue
+
         logger.info('base_path=%s', base_path)
 
         # 最終チェックファイルがあるかを確認する。このファイルがあるかどうかで本当にインストールされているか判断する
         if os.path.exists(__(base_path, final_check_file)) is False:
             raise Exception(_('ERR_NOT_EXIST_FINAL_CHECK_FILE'))
-
+        
         for path in remove_target_paths:
             remove_util(__(base_path, path))
 
@@ -402,6 +406,9 @@ def mod_installer_epic(epic_game_dir_name, target_repository, key_file_name, key
 
     # exeを見つける
     install_dll_dir_path = get_game_install_dir_path_epic(epic_game_dir_name)
+
+    if install_dll_dir_path is None:
+        return
 
     logger.info('install_dll_dir_path=%s', install_dll_dir_path)
 
@@ -450,6 +457,9 @@ def mod_installer_steam(app_id, target_repository, key_file_name, key_list_url, 
 
     # exeを見つける
     install_dll_dir_path = get_game_install_dir_path_steam(app_id)
+
+    if install_dll_dir_path is None:
+        return
 
     logger.info('install_dll_dir_path=%s', install_dll_dir_path)
 
