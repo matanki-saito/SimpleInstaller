@@ -1,5 +1,6 @@
 import concurrent.futures
 import ctypes
+import glob
 import json
 import logging
 import os.path
@@ -14,6 +15,7 @@ import tkinter.ttk as ttk
 import urllib.request
 import winreg
 import zipfile
+import json
 from ctypes.wintypes import MAX_PATH
 from os.path import join as __
 from tkinter import messagebox
@@ -103,47 +105,57 @@ def install_downloader(target_repository, install_dir_path):
     logger.info('zip unpacked')
 
 
-def get_game_install_dir_path_epic(target_game_dir_name):
+def get_game_install_dir_path_epic(target_app_id):
     logger.info('Get install dir path')
+    # レジストリを見て、Steamのインストール先を探す
+    #64bitを見て、なければ32bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
+    try:
+        epic_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher")
+    except OSError:
+        try:
+            epic_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Epic Games\\EpicGamesLauncher")
+        except OSError:
+            logger.info(_("ERR_NOT_FIND_EPIC_REGKEY"))
+            return None
 
-    # AppDirを見て設定ファイルを探す
-    appdata_path = os.getenv('LOCALAPPDATA')
-    logger.info("LOCALAPPDATA=%s", appdata_path)
+    logger.info('Find epic_install_key in reg')
 
-    if appdata_path is None:
-        logger.info('Failed: Get LOCALAPPDATA path from env')
+    try:
+        epic_data_path, key_type = winreg.QueryValueEx(epic_install_key, "AppDataPath")
+    except FileNotFoundError:
+        logger.info(_("ERR_NOT_FIND_DATAPATH_IN_EPIC_REGKEY"))
         return None
-    else:
-        logger.info('Success: Get LOCALAPPDATA path from env')
+    finally:
+        epic_install_key.Close()
 
-    # 設定ファイルに標準ゲームインストール先が存在するのでそれを取得する。
-    epic_game_launcher_setting_path = __(appdata_path, "EpicGamesLauncher", "Saved", "Config", "Windows", "GameUserSettings.ini")
-    logger.info("epic game launcher setting path = %s", epic_game_launcher_setting_path)
-    if not os.path.isfile(epic_game_launcher_setting_path):
-        logger.info('Failed: Get GameUserSettings.ini')
-        return None
-    else:
-        logger.info('Success: Get GameUserSettings.ini')
+    logger.info('Find epic data path=%s', epic_data_path)
 
-    game_default_install_dir_path = None
-    epic_game_default_install_pattern = re.compile(r'\s*DefaultAppInstallLocation\s*=\s*(.+)')
-    with open(epic_game_launcher_setting_path, mode='r', encoding="utf8", errors='ignore') as ini:
-        logger.info('open %s', epic_game_launcher_setting_path)
-        for line in ini:
-            result = epic_game_default_install_pattern.match(line)
-            if result is not None:
-                game_default_install_dir_path = result.group(1).strip("\"")
-                break
+    # 基本問題ないと思うが念の為
+    if key_type != winreg.REG_SZ:
+        raise Exception("invald value")
 
-        logger.info('game_install_dir_name=%s', game_default_install_dir_path)
+    # ゲーム一覧フォルダ
+    epic_manifests_path = __(epic_data_path, "Manifests")
+    if os.path.exists(epic_manifests_path) is False:
+        raise Exception(_("ERR_NOT_EXIST_DEFAULT_EPIC_DATA_MANIFESTS_DIR"))
 
-        if game_default_install_dir_path is None or not os.path.isdir(game_default_install_dir_path):
-            raise Exception("GameUserSettings.ini error")
+    # jsonなので順繰りに見ていく
+    game_install_dir_path = None
+    for filename in glob.glob(__(epic_manifests_path, "*.item")):
+        logger.info('Open manifest=%s', filename)
+        with open(os.path.join(os.getcwd(), filename),  mode='r', encoding="utf8", errors='ignore') as json_open:
+            json_load = json.load(json_open)
+            if json_load['AppName'] is not None and json_load['AppName'] == target_app_id:
+                logger.info('Find app')
+                if json_load['InstallLocation'] is not None:
+                    game_install_dir_path = str(json_load['InstallLocation'])
+                    break
+                else:
+                    logger.info('Not found InstallLocation')
 
-    # 標準ディレクトリから対象のゲームを探す
-    game_install_dir_path = __(game_default_install_dir_path, target_game_dir_name)
+    # チェック
     if not os.path.isdir(game_install_dir_path):
-        logger.info('Failed: Find target_game_dir_path')
+        logger.info('Not found game_install_dir_path')
         return None
     else:
         logger.info('Success: Find target_game_dir_path')
@@ -316,10 +328,10 @@ def dll_installer_steam(app_id, final_check_file, target_zip_url=None, target_re
     logger.info('finish')
 
 
-def dll_installer_epic(epic_game_dir_name, final_check_file, target_zip_url=None, target_repository=None):
+def dll_installer_epic(app_id, final_check_file, target_zip_url=None, target_repository=None):
     logger.info('Start dll installer for epic')
 
-    install_dir_path_epic = get_game_install_dir_path_epic(epic_game_dir_name)
+    install_dir_path_epic = get_game_install_dir_path_epic(app_id)
     if install_dir_path_epic is not None:
         logger.info('install_dir_path_epic=%s', install_dir_path_epic)
 
@@ -355,12 +367,12 @@ def uninstaller(uninstall_info_list):
 
         if 'app_id' in info:
             base_path = get_game_install_dir_path_steam(info['app_id'])
-            if os.path.exists(__(base_path, "claes.exe")):
+            if base_path is not None and os.path.exists(__(base_path, "claes.exe")):
                 logger.info('claes uninstall mode')
                 sb.call(__(base_path, "claes.exe /uninstall-all"))
 
-        elif 'epic_game_dir_name' in info:
-            base_path = get_game_install_dir_path_epic(info['epic_game_dir_name'])
+        elif 'epic_app_id' in info:
+            base_path = get_game_install_dir_path_epic(info['epic_app_id'])
             if base_path is not None and os.path.exists(__(base_path, "claes.exe")):
                 logger.info('claes uninstall mode')
                 sb.call(__(base_path, "claes.exe /uninstall-all"))
@@ -382,7 +394,7 @@ def uninstaller(uninstall_info_list):
         # 最終チェックファイルがあるかを確認する。このファイルがあるかどうかで本当にインストールされているか判断する
         if os.path.exists(__(base_path, final_check_file)) is False:
             raise Exception(_('ERR_NOT_EXIST_FINAL_CHECK_FILE'))
-        
+
         for path in remove_target_paths:
             remove_util(__(base_path, path))
 
@@ -401,11 +413,11 @@ def get_my_documents_folder():
         raise Exception(_("ERR_SHGetSpecialFolderPathW"))
 
 
-def mod_installer_epic(epic_game_dir_name, target_repository, key_file_name, key_list_url, game_dir_name=None):
+def mod_installer_epic(app_id, target_repository, key_file_name, key_list_url, game_dir_name=None):
     logger.info('mod install')
 
     # exeを見つける
-    install_dll_dir_path = get_game_install_dir_path_epic(epic_game_dir_name)
+    install_dll_dir_path = get_game_install_dir_path_epic(app_id)
 
     if install_dll_dir_path is None:
         return
@@ -590,7 +602,7 @@ if __name__ == '__main__':
         )
 
         dll_installer_epic(
-            epic_game_dir_name="EuropaUniversalis4",
+            app_id="da0103e959e54d139d0c109ded3b3672",
             final_check_file='eu4.exe',
             target_repository={
                 "author": "matanki-saito",
@@ -609,7 +621,7 @@ if __name__ == '__main__':
             key_list_url=repo_url + "eu4mods.json")
 
         mod_installer_epic(
-            epic_game_dir_name="EuropaUniversalis4",
+            app_id="da0103e959e54d139d0c109ded3b3672",
             target_repository={
                 "author": "matanki-saito",
                 "name": "moddownloader"
@@ -756,8 +768,8 @@ if __name__ == '__main__':
                                           command=lambda: threader(uninstall_button_eu4, lambda: uninstaller(
                                               [
                                                   {
-                                                      # EU4 DLL
-                                                      'epic_game_dir_name': "EuropaUniversalis4",
+                                                      # EU4 DLL epic
+                                                      'epic_app_id': "da0103e959e54d139d0c109ded3b3672",
                                                       'final_check_file': 'eu4.exe',
                                                       'remove_target_paths': [
                                                           'd3d9.dll',
@@ -783,6 +795,16 @@ if __name__ == '__main__':
                                                           'pattern_eu4_jps_2.log',
                                                           'README.md',
                                                           '.dist.v1.json'
+                                                      ]
+                                                  },
+                                                  {
+                                                      # EU4 MOD
+                                                      'game_dir_name': 'Europa Universalis IV EGS',
+                                                      'final_check_file': 'settings.txt',
+                                                      'remove_target_paths': [
+                                                          'claes.exe',
+                                                          'claes.key',
+                                                          'claes.cache'
                                                       ]
                                                   },
                                                   {
