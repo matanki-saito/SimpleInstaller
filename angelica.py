@@ -154,7 +154,7 @@ def get_game_install_dir_path_epic(target_app_id):
                     logger.info('Not found InstallLocation')
 
     # チェック
-    if not os.path.isdir(game_install_dir_path):
+    if game_install_dir_path is None or not os.path.isdir(game_install_dir_path):
         logger.info('Not found game_install_dir_path')
         return None
     else:
