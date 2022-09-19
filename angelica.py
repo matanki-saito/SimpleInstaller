@@ -137,7 +137,8 @@ def get_game_install_dir_path_epic(target_app_id):
     # ゲーム一覧フォルダ
     epic_manifests_path = __(epic_data_path, "Manifests")
     if os.path.exists(epic_manifests_path) is False:
-        raise Exception(_("ERR_NOT_EXIST_DEFAULT_EPIC_DATA_MANIFESTS_DIR"))
+        logger.info('x : At least one game is installed')
+        return None
 
     # jsonなので順繰りに見ていく
     game_install_dir_path = None
