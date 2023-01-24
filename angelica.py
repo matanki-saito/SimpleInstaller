@@ -382,6 +382,10 @@ def uninstaller(uninstall_info_list):
             base_path = __(get_my_documents_folder(),
                            "Paradox Interactive",
                            info['game_dir_name'])
+
+            if os.path.exists(base_path) is False:
+                continue
+
             # Modダウンローダーをuninstallモードで起動
             if os.path.exists(__(base_path, "claes.exe")):
                 logger.info('claes uninstall mode')
