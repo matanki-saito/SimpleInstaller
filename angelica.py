@@ -15,7 +15,6 @@ import tkinter.ttk as ttk
 import urllib.request
 import winreg
 import zipfile
-import json
 from ctypes.wintypes import MAX_PATH
 from os.path import join as __
 from tkinter import messagebox
@@ -64,8 +63,6 @@ def remove_util(path):
 
 
 def install(install_dir_path, target_zip_url, final_check_file):
-    logger.info('install')
-
     final_check_file_path = __(install_dir_path, final_check_file)
     logger.info('final_check_file_path=%s', final_check_file_path)
 
@@ -108,9 +105,10 @@ def install_downloader(target_repository, install_dir_path):
 def get_game_install_dir_path_epic(target_app_id):
     logger.info('Get install dir path')
     # レジストリを見て、Steamのインストール先を探す
-    #64bitを見て、なければ32bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
+    # 64bitを見て、なければ32bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
     try:
-        epic_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher")
+        epic_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                          "SOFTWARE\\WOW6432Node\\Epic Games\\EpicGamesLauncher")
     except OSError:
         try:
             epic_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\Epic Games\\EpicGamesLauncher")
@@ -144,7 +142,7 @@ def get_game_install_dir_path_epic(target_app_id):
     game_install_dir_path = None
     for filename in glob.glob(__(epic_manifests_path, "*.item")):
         logger.info('Open manifest=%s', filename)
-        with open(os.path.join(os.getcwd(), filename),  mode='r', encoding="utf8", errors='ignore') as json_open:
+        with open(os.path.join(os.getcwd(), filename), mode='r', encoding="utf8", errors='ignore') as json_open:
             json_load = json.load(json_open)
             if json_load['AppName'] is not None and json_load['AppName'] == target_app_id:
                 logger.info('Find app')
@@ -167,7 +165,7 @@ def get_game_install_dir_path_epic(target_app_id):
 def get_game_install_dir_path_steam(target_app_id):
     logger.info('Get install dir path')
     # レジストリを見て、Steamのインストール先を探す
-    #64bitを見て、なければ32bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
+    # 64bitを見て、なければ32bitのキーを探しに行く。それでもなければそもそもインストールされていないと判断する
     try:
         steam_install_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, "SOFTWARE\\WOW6432Node\\Valve\\Steam")
     except OSError:
