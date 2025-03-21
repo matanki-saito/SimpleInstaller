@@ -12,7 +12,7 @@ jobs:
     if: "! contains(github.event.head_commit.message, '[ci skip]')"
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.13]
 
     steps:
       - uses: actions/checkout@v2
@@ -27,10 +27,13 @@ jobs:
       - name: Install pyinstaller
         run: |
           pip install pyinstaller
+          pip install pyarmor
         shell: powershell
 
       - name: build installer
-        run: pyinstaller ./angelica.py -n installer --onefile --noconsole --icon=./icon.ico
+        run: |
+          pyarmor cfg pack:pyi_options = " --noconsole --icon ./icon.ico"
+          pyarmor gen --pack onefile angelica.py  
 
       - name: Make artifact package
         run: |
@@ -41,7 +44,7 @@ jobs:
       - name: Move files to artifact package
         run: |
           Move-Item README.md artifact/
-          Move-Item dist/installer.exe artifact/
+          Move-Item dist/angelica.exe artifact/installer.exe
         shell: powershell
 
       - name: generate artifact zip
